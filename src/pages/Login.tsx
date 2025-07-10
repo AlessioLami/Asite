@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useLoginMutation } from "../services/apis/authApi";
 import { setCredentials } from "../services/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,12 +20,13 @@ const Login = () => {
         navigate("/dashboard")
     }
 
-    const handleLogin = async (e) => {
+    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         try{
             const res = await login({email, password})
-            if(res.error?.data?.message){
-                toast.error(res.error.data.message)
+            if(res.error && "data" in res.error){
+                const message = (res.error.data as any)?.message;
+                toast.error(message)
             }else{
                 toast.success("Accesso effettuato con successo!")
                 dispatch(setCredentials({user: res.data.email, role: res.data.role}))

@@ -1,9 +1,15 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import { FiArrowLeft, FiPlus } from "react-icons/fi"
 import {FaClipboardList } from "react-icons/fa"
 import { IoIosNotifications } from "react-icons/io"
 import { useAddWhitelistedUserMutation, useGetWhitelistedUsersQuery, useRemoveWhitelistedUserMutation } from "../services/apis/whitelistApi"
 import { Toaster, toast } from "sonner"
+
+export type User = {
+    email: string;
+    role: string;
+    _id: string;
+}
 
 const Settings = () => {
 
@@ -16,15 +22,17 @@ const Settings = () => {
     const [email, setEmail] = useState("");
     const [role, setRole] = useState("user");
 
-    
-    const whitelist = error?.status === 400 ? [] : data ?? []
+    let whitelist = data ?? []    
+    if(error && "status" in error){
+        whitelist = error.status === 400 ? [] : data ?? []
+    }
 
-    const handleAddUser = async (e) => {
+    const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         try{
             const res = await add({email: email, role: role})
-            if(res.error?.data?.message){
-                toast.error(res.error.data.message)
+            if(res.error && "data" in res.error && (res.error.data as any)?.message){
+                toast.error((res.error.data as any).message)
             }else{
                 toast.success("L'utente è stato inserito con successo!")
                 refetch()
@@ -34,7 +42,7 @@ const Settings = () => {
         }
     }
 
-    const handleRemoveUser = async (e, id) => {
+    const handleRemoveUser = async (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
         e.preventDefault()
 
         try{
@@ -81,14 +89,14 @@ const Settings = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {whitelist.length > 0 ? whitelist.map((user, id) => {
+                                {whitelist.length > 0 ? whitelist.map((user: User, id: number) => {
                                     return(
                                         <tr key={id}>
                                             <td className="py-2 px-4 text-center">{user.email}</td>
                                             <td className="py-2 px-4 text-center">{user.role}</td>
                                             <td className="py-2 px-4 text-center">Si</td>
                                             <td className="py-2 px-4 text-center">
-                                                <button onClick={(e) => {handleRemoveUser(e, user._id)}} className="h-10 w-20 bg-red-400 rounded-xl text-white font-semibold">Rimuovi</button>
+                                                <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {handleRemoveUser(e, user._id)}} className="h-10 w-20 bg-red-400 rounded-xl text-white font-semibold">Rimuovi</button>
                                             </td>
                                         </tr>
                                     )
