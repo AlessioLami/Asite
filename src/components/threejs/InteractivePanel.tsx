@@ -19,7 +19,7 @@ const InteractivePanel = () => {
   return (
     <div className="relative z-1 w-full h-screen">
       <Canvas shadows>
-        <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} />
+        <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} />
         <ambientLight intensity={10} />
         <directionalLight position={[5, 5, 5]} intensity={10} />
         <Pavimento />
@@ -31,7 +31,7 @@ const InteractivePanel = () => {
           enableZoom={true}
           minZoom={40}
           maxZoom={60}
-          mouseButtons={{LEFT: THREE.MOUSE.PAN}}
+          mouseButtons={{LEFT: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE}}
         />
         <ClampControls controlsRef={controlsRef} limits={LIMITS}/>
       </Canvas>
