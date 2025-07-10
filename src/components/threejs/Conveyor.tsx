@@ -18,7 +18,7 @@ const Conveyor = () => {
 
   return(
     <>
-        <primitive object={scene}/>
+        <primitive object={scene} onClick={() => alert("OK")}/>
         <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.4, -0.4]}>
           <boxGeometry args={[2, 7]} />
           <meshBasicMaterial

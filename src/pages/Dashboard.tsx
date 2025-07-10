@@ -1,20 +1,12 @@
-import Sidebar from "../components/Sidebar.tsx";
+import Overlay from "../components/Overlay.tsx";
 import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 const Dashboard = () => {
 
     return (
-        <>
-        {
-            /*
-            <div className="flex items-center justify-between">
-                <Sidebar/>
-                <Map/>
-            </div>
-            */
-        }
-        <Sidebar/>
-        <InteractivePanel/>
-        </>
+        <div className="relative h-screen w-full">
+            <Overlay/>
+            <InteractivePanel/>
+        </div>
 
     )
 }

@@ -9,17 +9,17 @@ import ClampControls from "./ClampControls";
 const InteractivePanel = () => {
 
   const LIMITS = {
-    min: new THREE.Vector3(-3, -3, -3),
-    max: new THREE.Vector3(3, 3, 3)
+    min: new THREE.Vector3(-1.5, -1.5, -1.5),
+    max: new THREE.Vector3(1.5, 1.5, 1.5)
   }
   
   const controlsRef = useRef(null)
 
 
   return (
-    <div className="w-full h-screen">
+    <div className="relative z-1 w-full h-screen">
       <Canvas shadows>
-        <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} near={0.1} far={1000} />
+        <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} />
         <ambientLight intensity={10} />
         <directionalLight position={[5, 5, 5]} intensity={10} />
         <Pavimento />
@@ -29,8 +29,8 @@ const InteractivePanel = () => {
           enableRotate={false}
           enablePan={true}
           enableZoom={true}
-          minZoom={55}
-          maxZoom={100}
+          minZoom={40}
+          maxZoom={60}
           mouseButtons={{LEFT: THREE.MOUSE.PAN}}
         />
         <ClampControls controlsRef={controlsRef} limits={LIMITS}/>
