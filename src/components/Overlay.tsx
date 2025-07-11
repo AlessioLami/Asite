@@ -1,5 +1,5 @@
 import type React from "react";
-import { FiLogOut, FiSettings } from "react-icons/fi"
+import { FiLogOut} from "react-icons/fi"
 import { useLogoutMutation } from "../services/apis/authApi";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../services/slices/authSlice";

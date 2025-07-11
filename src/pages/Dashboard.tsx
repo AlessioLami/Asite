@@ -13,7 +13,7 @@ const Dashboard = () => {
 
     
     return (
-        <div className="relative w-full overflow-clip">
+        <div className="relative w-full overflow-clip min-h-screen">
             <Overlay email={user} role={role}/>
             <InteractivePanel/>
         </div>
