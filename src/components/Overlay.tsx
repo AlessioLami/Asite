@@ -9,19 +9,22 @@ import { toast, Toaster } from "sonner";
 export interface OverlayProps {
     email: string;
     role: string;
+    errorCount: number;
+    onlineSensorCount: number;
+    elapsedTime: string;
 }
 
 const errors = [
     {"id": 1, "description": "Motore sovvrariscaldato.", "timestamp": "2025-07-10"},
     {"id": 2, "description": "Il sensore non trasmette da piu di 1 ora.", "timestamp": "2025-07-10"},
     {"id": 3, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
-    {"id": 4, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
-    {"id": 4, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
-    {"id": 4, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
-    {"id": 4, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"}
+    {"id": 5, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
+    {"id": 6, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
+    {"id": 7, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
+    {"id": 8, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"}
 ]
 
-const Overlay = ({email, role} : OverlayProps) => {
+const Overlay = ({email, role, errorCount, onlineSensorCount, elapsedTime} : OverlayProps) => {
 
     const [logout] = useLogoutMutation()
     const dispatch = useDispatch()
@@ -39,14 +42,15 @@ const Overlay = ({email, role} : OverlayProps) => {
         <>
             <Toaster position="top-center" richColors className="absolute"/>
         <div className="absolute pointer-events-none  w-full h-screen flex justify-between items-center z-100">
-            <div className="flex flex-col justify-between gap-10 p-5 h-full bg-black/25 pointer-events-auto">
+            <div className="flex flex-col justify-between gap-10 p-5 h-full bg-black/25 pointer-events-auto min-w-[400px] max-w-[450px]">
                 <h1 className="text-5xl font-black max-w-[300px] text-white">SELEZIONE RIFIUTI URBANI</h1>
                 <div className="w-full flex flex-col gap-1 h-full">
                     <h1 className="text-4xl font-black text-gray-500">PANORAMICA</h1>
                    <div className="flex flex-col gap-2">
-                    <h1 className="text-4xl font-black text-white">STATO: <span className="text-green-500">OK</span></h1>
-                    <h1 className="text-4xl font-black text-white">ERRORI: <span className="text-green-500">0</span></h1>
-                    <h1 className="text-lg font-black text-white">ULTIMA RICEZIONE: <span className="text-blue-500">10m 37s</span></h1></div> 
+                    <h1 className="text-4xl font-black text-white">STATO: {errorCount === 0 ? <span className="text-green-500">OK</span> : <span className="text-red-500">KO</span>}</h1>
+                    <h1 className="text-4xl font-black text-white">ERRORI: <span className={errorCount === 0 ? "text-green-500" : "text-red-500"}>{errorCount}</span></h1>
+                    <h1 className="text-2xl font-black text-white">SENSORI ONLINE: <span className="text-blue-500">{onlineSensorCount}<span className="text-white">/</span><span className="text-green-500">18</span></span></h1>
+                    <h1 className="text-xl font-black text-white">ULTIMA RICEZIONE: <span className="text-blue-500">{elapsedTime}</span></h1></div> 
                 </div>
                 <div className="flex flex-col gap-5">
                     <h1 onClick={() => navigate("/settings")}className="text-3xl  hover:text-gray-300 align-middle truncate items-center font-black text-white flex gap-2">IMPOSTAZIONI</h1>
@@ -61,12 +65,12 @@ const Overlay = ({email, role} : OverlayProps) => {
                 </div>
                 
             </div>  
-            <div className="max-w-[300px] bg-black/25 w-full p-5 h-full flex flex-col gap-10 pointer-events-auto">
+            <div className="bg-black/25 w-full p-5 h-full flex flex-col gap-10 pointer-events-auto max-w-[360px]">
                 <h1 className="text-4xl font-black text-white">LISTA ERRORI</h1>
-                <div className="flex flex-col gap-3 overflow-y-scroll scrollbar-custom max-h-[50%]">
+                <div className="flex flex-col gap-3 overflow-y-scroll scrollbar-custom">
                     {errors.map((error) => {
                         return(
-                            <div className="flex flex-col bg-red-500/50 p-2 rounded-xl">
+                            <div key={error.id} className="flex flex-col bg-red-500/50 p-2 rounded-xl">
                                 <h1 className="text-white font-bold">ID Errore: {error.id}</h1>
                                 <p className="text-white font-semibold">{error.description}</p>
                                 <p className="text-gray-400 font-medium">{error.timestamp}</p>

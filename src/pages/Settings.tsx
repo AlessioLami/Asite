@@ -9,6 +9,7 @@ export type User = {
     email: string;
     role: string;
     _id: string;
+    isRegistered: string;
 }
 
 const Settings = () => {
@@ -26,6 +27,7 @@ const Settings = () => {
     if(error && "status" in error){
         whitelist = error.status === 400 ? [] : data ?? []
     }
+
 
     const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -94,7 +96,7 @@ const Settings = () => {
                                         <tr key={id}>
                                             <td className="py-2 px-4 text-center">{user.email}</td>
                                             <td className="py-2 px-4 text-center">{user.role}</td>
-                                            <td className="py-2 px-4 text-center">Si</td>
+                                            <td className="py-2 px-4 text-center">{user.isRegistered ? "Sì" : "No"}</td>
                                             <td className="py-2 px-4 text-center">
                                                 <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {handleRemoveUser(e, user._id)}} className="h-10 w-20 bg-red-400 rounded-xl text-white font-semibold">Rimuovi</button>
                                             </td>
