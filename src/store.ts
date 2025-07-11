@@ -4,6 +4,7 @@ import storage from "redux-persist/lib/storage"
 import  authApi  from "./services/apis/authApi";
 import whitelistApi from "./services/apis/whitelistApi"
 import authSlice from "./services/slices/authSlice";
+import logsApi from "./services/apis/logsApi";
 
 const persistConfig = {
     key: "auth",
@@ -17,11 +18,12 @@ export const store = configureStore({
     reducer: {
         [authApi.reducerPath]: authApi.reducer,
         [whitelistApi.reducerPath]: whitelistApi.reducer,
+        [logsApi.reducerPath]: logsApi.reducer,
         auth: persistedAuthReducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false
-    }).concat(authApi.middleware, whitelistApi.middleware)
+    }).concat(authApi.middleware, whitelistApi.middleware, logsApi.middleware)
 })
 
 

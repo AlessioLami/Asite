@@ -1,5 +1,5 @@
 import type React from "react";
-import { FiLogOut } from "react-icons/fi"
+import { FiLogOut, FiSettings } from "react-icons/fi"
 import { useLogoutMutation } from "../services/apis/authApi";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../services/slices/authSlice";
@@ -10,6 +10,16 @@ export interface OverlayProps {
     email: string;
     role: string;
 }
+
+const errors = [
+    {"id": 1, "description": "Motore sovvrariscaldato.", "timestamp": "2025-07-10"},
+    {"id": 2, "description": "Il sensore non trasmette da piu di 1 ora.", "timestamp": "2025-07-10"},
+    {"id": 3, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
+    {"id": 4, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
+    {"id": 4, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
+    {"id": 4, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
+    {"id": 4, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"}
+]
 
 const Overlay = ({email, role} : OverlayProps) => {
 
@@ -26,35 +36,47 @@ const Overlay = ({email, role} : OverlayProps) => {
     }
 
     return(
-        <div className="absolute pointer-events-none  w-full h-screen flex items-start z-100">
-            <Toaster position="top-center" richColors/>
-            <div className="flex flex-col justify-center gap-10 p-5 my-2 pointer-events-auto">
-                <h1 className="text-5xl font-bold max-w-[300px] text-white">SELEZIONE RIFIUTI URBANI</h1>
-                <div className="w-full">
-                    <h1 className="text-4xl font-bold text-white">STATO</h1>
-                    <h1 className="text-4xl font-bold text-white">ERRORI</h1>
+        <>
+            <Toaster position="top-center" richColors className="absolute"/>
+        <div className="absolute pointer-events-none  w-full h-screen flex justify-between items-center z-100">
+            <div className="flex flex-col justify-between gap-10 p-5 h-full bg-black/25 pointer-events-auto">
+                <h1 className="text-5xl font-black max-w-[300px] text-white">SELEZIONE RIFIUTI URBANI</h1>
+                <div className="w-full flex flex-col gap-1 h-full">
+                    <h1 className="text-4xl font-black text-gray-500">PANORAMICA</h1>
+                   <div className="flex flex-col gap-2">
+                    <h1 className="text-4xl font-black text-white">STATO: <span className="text-green-500">OK</span></h1>
+                    <h1 className="text-4xl font-black text-white">ERRORI: <span className="text-green-500">0</span></h1>
+                    <h1 className="text-lg font-black text-white">ULTIMA RICEZIONE: <span className="text-blue-500">10m 37s</span></h1></div> 
                 </div>
-                <div className="flex items-center justify-start w-full bg-black p-3 rounded-xl">
-                    <h1 className="font-bold p-2 rounded-xl bg-white">WI</h1>
-                    <div className="font-bold text-white px-3">
-                        <h1>{email}</h1>
-                        <h1>Ruolo: {role}</h1>
+                <div className="flex flex-col gap-5">
+                    <h1 onClick={() => navigate("/settings")}className="text-3xl  hover:text-gray-300 align-middle truncate items-center font-black text-white flex gap-2">IMPOSTAZIONI</h1>
+                    <div className="flex items-center justify-start w-full  py-3 rounded-xl">
+                        <h1 className="font-bold p-2 rounded-xl bg-white">WI</h1>
+                        <div className="font-bold text-white px-3">
+                            <h1>{email}</h1>
+                            <h1>Ruolo: {role}</h1>
+                        </div>
+                        <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleLogout(e)}className="hover:bg-gray-300 bg-white p-4 rounded-xl"><FiLogOut/></button>
                     </div>
-                    <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => handleLogout(e)}className="hover:bg-gray-300 bg-white p-4 rounded-xl"><FiLogOut/></button>
                 </div>
-            </div>
-            <div className="w-full h-screen flex flex-col justify-between p-5 py-8">
-               <div className="bg-black rounded-xl h-screen max-h-[50px] w-full flex justify-center items-center">
-               <h1 className="text-2xl font-bold text-white">GIOVEDI 10/07/2025 15:18</h1>
-                </div> 
-                <div className="bg-black rounded-xl h-screen max-h-[50px] w-full flex justify-center items-center">
-                    <h1 className="text-2xl font-bold text-white">ASITESENS</h1>
+                
+            </div>  
+            <div className="max-w-[300px] bg-black/25 w-full p-5 h-full flex flex-col gap-10 pointer-events-auto">
+                <h1 className="text-4xl font-black text-white">LISTA ERRORI</h1>
+                <div className="flex flex-col gap-3 overflow-y-scroll scrollbar-custom max-h-[50%]">
+                    {errors.map((error) => {
+                        return(
+                            <div className="flex flex-col bg-red-500/50 p-2 rounded-xl">
+                                <h1 className="text-white font-bold">ID Errore: {error.id}</h1>
+                                <p className="text-white font-semibold">{error.description}</p>
+                                <p className="text-gray-400 font-medium">{error.timestamp}</p>
+                            </div>
+                        )
+                    })}
                 </div>
-            </div>
-            <div className="max-w-[300px] w-full p-5 my-2 pointer-events-auto">
-                <h1 className="text-4xl font-bold text-white">LISTA ERRORI</h1>
             </div>
         </div>
+        </>
     )
 }
 

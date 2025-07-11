@@ -3,6 +3,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.scrollbar-custom {
+  scrollbar-width: thin; /* per Firefox */
+  scrollbar-color: gray transparent; /* thumb e track in Firefox */
+  scrollbar-width: 2px;
+}
+
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
