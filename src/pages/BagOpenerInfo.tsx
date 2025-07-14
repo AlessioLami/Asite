@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import { Html, OrbitControls, OrthographicCamera, useGLTF } from "@react-three/drei"
+import { OrbitControls, OrthographicCamera, useGLTF } from "@react-three/drei"
 import { Canvas } from "@react-three/fiber"
 import Pavimento from "../components/threejs/Pavimento";
 import { useRef } from "react";

@@ -4,6 +4,9 @@ Il frontend di asite serve a monitorare l'impianto di selezione dei rifiuti urba
 ![panoramica](./immagini_github/dashboard.png)
 Panoramica impianto
 
+![view dettaglia](./immagini_github/detailed_view_conveyor2.png)
+Overview dettagliata Nastro Trasportatore
+
 ![login](./immagini_github/login.png)
 Login Form
 

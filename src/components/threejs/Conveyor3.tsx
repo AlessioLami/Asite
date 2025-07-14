@@ -1,4 +1,4 @@
-import { Html, useGLTF } from '@react-three/drei'
+import { useGLTF } from '@react-three/drei'
 import { useRef } from 'react'
 import * as THREE from 'three'
 import type { ErrorProps } from './Macchinario'

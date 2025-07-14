@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { Canvas } from "@react-three/fiber";
-import { OrthographicCamera, OrbitControls, useProgress, Html } from "@react-three/drei";
-import { Suspense, useRef } from "react";
+import { OrthographicCamera, OrbitControls, useProgress } from "@react-three/drei";
+import { useRef } from "react";
 import Pavimento from "./Pavimento";
 import Macchinario from "./Macchinario";
 import ClampControls from "./ClampControls";

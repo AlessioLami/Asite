@@ -5,13 +5,13 @@ import type { RootState } from "../store.ts";
 import { useGetLogsQuery } from "../services/apis/logsApi.ts";
 import { useEffect, useState } from "react";
 
-const LIMITS = {
+/*const LIMITS = {
     "temp": [
         {"m1": 30},
         {"m2": 40},
         {"m3": 70}
     ],
-}
+}*/
 
 
 const calcElapsedTime = (data : Date) => {
