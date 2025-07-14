@@ -16,9 +16,9 @@ const Macchinario = () => {
         <group>
             <Conveyor hasError={false}/>
             <Conveyor2 hasError={false}/>
-            <Conveyor3 hasError={false}/>
+            <Conveyor3 hasError={true}/>
             <Conveyor4 hasError={false}/>
-            <BagOpener hasError={false}/>
+            <BagOpener hasError={true}/>
         </group>
     )
 }

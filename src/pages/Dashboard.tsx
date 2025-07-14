@@ -42,8 +42,6 @@ const Dashboard = () => {
 
     const { data, isLoading} = useGetLogsQuery({dateStart: "2025-07-02T05:55Z", dateStop: dateStop}, {pollingInterval: 10000})
     if(!isLoading){
-        console.log(data)
-
     elapsedTime = calcElapsedTime(data.assetQueryList.lastDate)
     onlineSensorCount = data.assetQueryList.uniqueDispo[0] === null ? 0 : data.assetQueryList.uniqueDispo.length  
     }
