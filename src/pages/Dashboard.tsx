@@ -5,6 +5,15 @@ import type { RootState } from "../store.ts";
 import { useGetLogsQuery } from "../services/apis/logsApi.ts";
 import { useEffect, useState } from "react";
 
+const LIMITS = {
+    "temp": [
+        {"m1": 30},
+        {"m2": 40},
+        {"m3": 70}
+    ],
+}
+
+
 const calcElapsedTime = (data : Date) => {
     const delta = Date.now() - new Date(data).getTime();
     const s = Math.floor(delta / 1000);

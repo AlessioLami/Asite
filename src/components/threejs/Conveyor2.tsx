@@ -28,11 +28,12 @@ const Conveyor2 = ({hasError}: ErrorProps) => {
               depthWrite={false}
             />
           </mesh>  
-          <Html position={[-2, 1, -2]} center scale={1.2}>
+          {/*<Html position={[-2, 1, -2]} center scale={1.2}>
             <div className='bg-red-500 text-white rounded-lg shadow-xl px-10 py-2 min-w-[250px] font-bold text-sm max-w-[400px] text-ellipsis'>
               ⚠ Nastro bloccato
             </div>
           </Html>
+          */}
           </group>
         )} 
     </>

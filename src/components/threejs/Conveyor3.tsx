@@ -28,11 +28,12 @@ const Conveyor3 = ({hasError}: ErrorProps) => {
               depthWrite={false}
             />
           </mesh>  
-          <Html position={[-3, 0.5, -6.4]} center scale={1.2}>
+          {/*<Html position={[-3, 0.5, -6.4]} center scale={1.2}>
             <div className='bg-red-500 text-white rounded-lg shadow-xl px-2 py-2 font-bold text-sm max-w-[400px] text-ellipsis'>
               ⚠ Motore sovvrariscaldato.
             </div>
           </Html>
+          */}
           </group>
         ))} 
     </>

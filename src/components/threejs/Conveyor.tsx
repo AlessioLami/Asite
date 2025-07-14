@@ -33,11 +33,12 @@ const Conveyor = ({ hasError }: ErrorProps) => {
             />
           </mesh>
 
-          <Html position={[-6, 1.5, -5.4]} center scale={1.2}>
+          {/*<Html position={[-6, 1.5, -5.4]} center scale={1.2}>
             <div className='bg-red-500 text-white rounded-lg shadow-xl px-10 py-2 min-w-[250px] font-bold text-sm max-w-[400px] text-ellipsis'>
               ⚠ Nastro bloccato
             </div>
           </Html>
+          */}
         </group>
       )}
     </>
