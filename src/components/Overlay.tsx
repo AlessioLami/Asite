@@ -52,8 +52,11 @@ const Overlay = ({email, role, errorCount, onlineSensorCount, elapsedTime} : Ove
                     <h1 className="text-2xl font-black text-white">SENSORI ONLINE: <span className="text-blue-500">{onlineSensorCount}<span className="text-white">/</span><span className="text-green-500">18</span></span></h1>
                     <h1 className="text-xl font-black text-white">ULTIMA RICEZIONE: <span className="text-blue-500">{elapsedTime}</span></h1></div> 
                 </div>
-                <div className="flex flex-col gap-5">
-                    <h1 onClick={() => navigate("/settings")}className="text-3xl  hover:text-gray-300 align-middle truncate items-center font-black text-white flex gap-2">IMPOSTAZIONI</h1>
+                <div className="flex flex-col gap-3">
+                    {role === "SUPERADMIN" && (
+                        <h1 onClick={() => navigate("/dispositivi")} className="text-3xl hover:text-gray-300 font-black text-white gap-2">DISPOSITIVI</h1>
+                    )}
+                    <h1 onClick={() => navigate("/settings")}className="text-3xl  hover:text-gray-300 font-black text-white gap-2">IMPOSTAZIONI</h1>
                     <div className="flex items-center justify-start w-full  py-3 rounded-xl">
                         <h1 className="font-bold p-2 rounded-xl bg-white">WI</h1>
                         <div className="font-bold text-white px-3">
