@@ -10,8 +10,8 @@ const Conveyor2 = ({hasError}: ErrorProps) => {
     const glowRef = useRef<THREE.Mesh>(null)
 
   scene.scale.set(1.9, 1, 1.5)
-  scene.position.set(-2, 0, -2.7)
-  scene.rotation.set(0, Math.PI * 2, 0)
+  scene.position.set(-2, 0.5, -2.7)
+  scene.rotation.set(0, Math.PI * 2, -0.06)
   const navigate = useNavigate()
 
   return(
