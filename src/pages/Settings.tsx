@@ -6,7 +6,7 @@ import { IoIosNotifications } from "react-icons/io"
 import { MdSensors } from "react-icons/md"
 import { useAddWhitelistedUserMutation, useGetWhitelistedUsersQuery, useRemoveWhitelistedUserMutation } from "../services/apis/whitelistApi"
 import { Toaster, toast } from "sonner"
-import { useAddDispoMutation, useGetDispoQuery, useRemoveDispoMutation } from "../services/apis/dispoApi"
+import { useAddDispoMutation, useGetDispoQuery, useRemoveDispoMutation, useUpdateDispoMutation } from "../services/apis/dispoApi"
 import { useAddUnitaMutation, useGetUnitaQuery, useRemoveUnitaMutation } from "../services/apis/unitaApi"
 import { useSelector } from "react-redux"
 import type { RootState } from "@react-three/fiber"
@@ -28,6 +28,7 @@ export type Dispo = {
 export type Unita = {
     _id: string;
     codifica: string;
+    tempLimit: number;
 }
 
 const Settings = () => {
@@ -37,6 +38,11 @@ const Settings = () => {
     const [add] = useAddWhitelistedUserMutation() 
     const [addDispo] = useAddDispoMutation()
     const [addUnita] = useAddUnitaMutation()
+
+    const [updatedId, setUpdatedId] = useState<string|null>(null)
+    const [updatedMac, setUpdatedMac] = useState<string|null>(null)
+    const [updatedCodifica, setUpdatedCodifica] = useState<string|null>(null)
+    const [updateDispo] = useUpdateDispoMutation()
 
     const [remove] = useRemoveWhitelistedUserMutation()
     const [removeDispo] = useRemoveDispoMutation()
@@ -52,6 +58,8 @@ const Settings = () => {
     const [mac, setMac] = useState("");
     const [codificaDispo, setCodifica] = useState("")
     const [unitaMisurata, setUnitaMisurata] = useState<string|undefined>(undefined)
+    const [type, setType] = useState<string>("installato")
+    const [tempLimit, setTempLimit] = useState(50);
 
     const [codificaUnita, setCodificaUnita] = useState("")
 
@@ -149,10 +157,22 @@ const Settings = () => {
         }
     }
 
+    const handleUpdateDispo = async(e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        try{
+
+        await updateDispo({id: updatedId, data : {mac: updatedMac, codifica: updatedCodifica, type: type}})
+        toast.success("Dispositivo aggiornato con successo")
+        await refetchDispo()
+        } catch(error){
+            toast.error("C'è stato un errore nell'aggiornamento di un dispositivo.")
+        }
+    }
+
     const handleAddUnita = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         try{
-            const res = await addUnita(codificaUnita)
+            const res = await addUnita({codifica: codificaUnita, tempLimit: tempLimit})
             if(res.error && "data" in res.error && (res.error.data as any)?.message){
                 toast.error((res.error.data as any).message)
             }else{
@@ -168,7 +188,10 @@ const Settings = () => {
         <div className="flex h-screen w-full">
             <Toaster position="top-center" richColors/>
            <div className="flex flex-col gap-10 p-10 border-r-5">
+                <div className="flex flex-col gap-3">
                 <a href="/dashboard" className="flex align-middle items-center gap-2 bg-gray-300 rounded-xl font-bold p-2"><FiArrowLeft/>Panoramica</a>
+                <h1 className='text-3xl font-black'>IMPOSTAZIONI</h1>
+                </div>
                 <div className="flex flex-col gap-3 font-semibold text-xl w-full">
                     <h1 onClick={() => setSection("whitelist")} className={`${section == "whitelist" ? "text-black" : "text-gray-500"} flex align-middle items-center gap-1`}><FaClipboardList/>Whitelist</h1>
                     <h1 onClick={() => setSection("dispositivi")} className={`${section == "dispositivi" ? "text-black" : "text-gray-500"} flex align-middle items-center gap-1`}><MdSensors/>Dispositivi</h1>
@@ -177,7 +200,7 @@ const Settings = () => {
                 </div>
             </div> 
             {section == "whitelist" && (
-                    <div className="p-10 flex flex-col gap-10 w-full">
+                    <div className="p-10 flex flex-col gap-3 w-full">
                         <h1 className="text-4xl font-bold">WHITELIST</h1>
                         <form onSubmit={handleAddUser} className="flex w-full gap-2">
                             <input onChange={(e) => setEmail(e.target.value)} placeholder="Email da aggiungere alla whitelist." className="p-2 border-3 rounded-lg w-full"/>
@@ -215,7 +238,7 @@ const Settings = () => {
             )}
 
             {section == "dispositivi" && (
-                <div className="p-10 flex flex-col gap-10 w-full">
+                <div className="p-10 flex flex-col gap-3 w-full">
                         <h1 className="text-4xl font-bold">DISPOSITIVI</h1>
                         <form onSubmit={handleAddDispo} className="flex w-full gap-2">
                             <input onChange={(e) => setMac(e.target.value)} placeholder="Indirizzo MAC del dispositivo." className="p-2 border-3 rounded-lg w-full"/>
@@ -225,6 +248,18 @@ const Settings = () => {
                                 {unitaList.map((unita: Unita, id: number) =>{
                                     return <option key={id} value={unita._id}>{unita.codifica.toUpperCase()}</option>
                                 })}
+                            </select>
+                            <button type="submit" className="px-4 bg-gray-300 rounded-xl flex justify-center items-center leading-none gap-3 align-middle"><FiPlus/> Aggiungi</button>
+                        </form>
+                         <form onSubmit={handleUpdateDispo} className="flex w-full gap-2">
+                            <select  onChange={(e) => setUpdatedId(e.target.value)} className="p-2 border-3 rounded-lg w-full">
+                                {dispoList.length > 0 ? dispoList.map((dispo: Dispo) => <option value={dispo._id}>{dispo.codifica}</option>) : "Non ci sono dispositivi registrati."}
+                            </select>
+                            <input onChange={(e) => setUpdatedCodifica(e.target.value)} placeholder="Codifica aggiornata." className="p-2 border-3 rounded-lg w-full"/>
+                            <input onChange={(e) => setUpdatedMac(e.target.value)} placeholder="MAC aggiornato." className="p-2 border-3 rounded-lg w-full"/>
+                            <select className="p-3 rounded-lg border-3" onChange={(e) => setType(e.target.value)}>
+                                <option value={"installato"}>Installato'</option>
+                                <option value={"test"}>Test</option>
                             </select>
                             <button type="submit" className="px-4 bg-gray-300 rounded-xl flex justify-center items-center leading-none gap-3 align-middle"><FiPlus/> Aggiungi</button>
                         </form>
@@ -246,7 +281,7 @@ const Settings = () => {
                                             <td className="py-2 px-4 text-center">{dispo.mac}</td>
                                             <td className="py-2 px-4 text-center">{dispo.codifica}</td>
                                             <td className="py-2 px-4 text-center">{dispo.unita_misurata ? dispo.unita_misurata.codifica.toUpperCase() : "N/A"}</td>
-                                            <td className="py-2 px-4 text-center">
+                                            <td className="py-2 px-4 text-center flex gap-2 justify-center">
                                                 <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {handleRemoveDispo(e, dispo._id)}} className="h-10 w-20 bg-red-400 rounded-xl text-white font-semibold">Rimuovi</button>
                                             </td>
                                         </tr>
@@ -258,10 +293,11 @@ const Settings = () => {
             )}
 
             {section == "unita" && (
-                <div className="p-10 flex flex-col gap-10 w-full">
+                <div className="p-10 flex flex-col gap-3 w-full">
                         <h1 className="text-4xl font-bold">UNITA' MISURATE</h1>
                         <form onSubmit={handleAddUnita} className="flex w-full gap-2">
                             <input onChange={(e) => setCodificaUnita(e.target.value)} placeholder="Codifica dell'unità." className="p-2 border-3 rounded-lg w-full"/>
+                            <input type="number" onChange={(e) => setTempLimit(parseInt(e.target.value))} placeholder="Temperatura Limite." className="p-2 border-3 rounded-lg w-full"/>
                             <button type="submit" className="px-4 bg-gray-300 rounded-xl flex justify-center items-center leading-none gap-3 align-middle"><FiPlus/> Aggiungi</button>
                         </form>
                         <table className="w-full border-3 rounded-xl text-left">
@@ -269,6 +305,7 @@ const Settings = () => {
                                 <tr>
                                     <th className="py-2 px-4 border-b text-center">ID</th>
                                     <th className="py-2 px-4 border-b text-center">Codifica</th>
+                                    <th className="py-2 px-4 border-b text-center">Temperatura Limite</th>
                                     <th className="py-2 px-4 border-b text-center">Azioni</th>
                                 </tr>
                             </thead>
@@ -278,6 +315,7 @@ const Settings = () => {
                                         <tr key={id}>
                                             <td className="py-2 px-4 text-center">{unita._id}</td>
                                             <td className="py-2 px-4 text-center">{unita.codifica.toUpperCase()}</td>
+                                            <td className="py-2 px-4 text-center">{unita.tempLimit}°C</td>
                                             <td className="py-2 px-4 text-center">
                                                 <button onClick={(e: React.MouseEvent<HTMLButtonElement>) => {handleRemoveUnita(e, unita._id)}} className="h-10 w-20 bg-red-400 rounded-xl text-white font-semibold">Rimuovi</button>
                                             </td>

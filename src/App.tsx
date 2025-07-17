@@ -11,6 +11,7 @@ import Conveyor4Info from "./pages/Conveyor4Info";
 import BagOpenerInfo from "./pages/BagOpenerInfo";
 import VaglioInfo from "./pages/VaglioInfo";
 import Dispositivi from "./pages/Dispositivi";
+import Sniffer from "./pages/Sniffer";
 
 const App = () => {
   return (
@@ -49,8 +50,12 @@ const App = () => {
           <Route path="/vaglio" element={<VaglioInfo/>}/>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={"superadmin"}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["superadmin"]}/>}>
           <Route path="/dispositivi" element={<Dispositivi/>}/>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={["superadmin"]}/>}>
+          <Route path="/sniffer" element={<Sniffer/>}/>
         </Route>
 
       </Routes>

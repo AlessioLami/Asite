@@ -1,39 +1,21 @@
-import { useState } from 'react';
-import { Calendar } from '../components/ui/calendar';
-import type { DateRange } from 'react-day-picker';
 import { FiArrowLeft } from 'react-icons/fi';
-import { useGetLogsQuery } from '../services/apis/logsApi';
+import { useGetSnifferQuery } from '../services/apis/snifferApi';
 
-const Dispositivi = () => {
-  const today = new Date();
-  const fiveDaysAgo = new Date();
-  fiveDaysAgo.setDate(today.getDate() - 14);
+const Sniffer = () => {
 
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: fiveDaysAgo,
-    to: today,
-  });
-
-  const handleDateChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-    refetch()
-  };
-
-  const { data, error, refetch } = useGetLogsQuery({
-    dateStart: dateRange?.from?.toISOString(),
-    dateStop: dateRange?.to?.toISOString(),
-  });
+    const { data, error, refetch } = useGetSnifferQuery({});
 
   if(error){
     refetch()
   }
 
   const latestLogMap = new Map();
+  console.log(data)
 
-  if(data?.logDispo){
-    for(const log of data.logDispo){
-    if(!latestLogMap.has(log.codifica)){
-        latestLogMap.set(log.codifica, log);
+  if(data?.logSniffer){
+    for(const log of data.logSniffer){
+    if(!latestLogMap.has(log.sniffer_codifica)){
+        latestLogMap.set(log.sniffer_codifica, log);
         }
     }
   }
@@ -54,7 +36,7 @@ const Dispositivi = () => {
   const chartData = [...latestLogMap.values()].map((log) => {
     const percent = convertToPercent(log.batt_level);
     return{
-        name: log.codifica,
+        name: log.sniffer_codifica,
         percent,
         fill: getColor(percent),
     }
@@ -70,16 +52,10 @@ const Dispositivi = () => {
           >
             <FiArrowLeft />Panoramica
           </a>
-          <h1 className="text-5xl font-black">DISPOSITIVI</h1>
+          <h1 className="text-5xl font-black">SNIFFER</h1>
         </div>
-        <Calendar
-          mode="range"
-          selected={dateRange}
-          onSelect={handleDateChange}
-          className="mx-[-20px] py-2 w-full"
-        />
         <div className='w-full flex flex-col justify-start text-start'>
-           <h2 className='text-xl font-bold mb-2'>Livello di Batteria dei Sensori</h2> 
+           <h2 className='text-xl font-bold mb-2'>Livello di Batteria degli Sniffer</h2> 
            <div className='w-full'>
             {chartData.map((log) => (
                 (<div className='flex text-xs justify-between text-start font-semibold'>{log.name}<h1 className='rounded p-1 mt-1 pr-1 ' style={{width: `${log.percent-20}%`, backgroundColor: `${log.fill}`} }>{log.percent.toPrecision(2)}</h1></div>)
@@ -92,13 +68,13 @@ const Dispositivi = () => {
                             <thead className="bg-gray-100">
                                 <tr>
                                     <th className="py-2 px-4 border-b text-center">Codifica</th>
-                                    <th className="py-2 px-4 border-b text-center">ID</th>
+                                    <th className="py-2 px-4 border-b text-center">MAC</th>
                                     <th className="py-2 px-4 border-b text-center">Liv. Batteria</th>
                                     <th className="py-2 px-4 border-b text-center">Azioni</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {data?.logDispo.length > 0 ? data?.logDispo.map((log: any, id: number) => {
+                                {data?.logSniffer.length > 0 ? data?.logSniffer.map((log: any, id: number) => {
                                     
                                     const date = new Date(log.ts_registrazione)
                                     const month = date.getMonth()
@@ -108,8 +84,8 @@ const Dispositivi = () => {
 
                                     return(
                                         <tr key={id}>
-                                            <td className="py-2 px-4 text-center">{log.codifica}</td>
-                                            <td className='py-2 px-4 text-center'>{log._id}</td>
+                                            <td className="py-2 px-4 text-center">{log.sniffer_codifica}</td>
+                                            <td className='py-2 px-4 text-center'>{log.mac_sniffer}</td>
                                             <td className="py-2 px-4 text-center">{convertToPercent(log.batt_level).toPrecision(2)}%</td>
                                             <td className='py-2 px-4 text-center'>{`${day}-${month} ${hours}:${minutes}`}</td>
                                         </tr>
@@ -122,4 +98,4 @@ const Dispositivi = () => {
   );
 };
 
-export default Dispositivi;
+export default Sniffer

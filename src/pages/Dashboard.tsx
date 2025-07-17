@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import Overlay from "../components/Overlay.tsx";
 import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 import type { RootState } from "../store.ts";
-import { useGetLogsQuery } from "../services/apis/logsApi.ts";
+import { useGetLastQuery, useGetLogsQuery } from "../services/apis/logsApi.ts";
 import { useEffect, useState } from "react";
 
 const calcElapsedTime = (data : Date) => {
@@ -40,10 +40,12 @@ const Dashboard = () => {
     let onlineSensorCount = 0
     let errorCount = 9
 
-    const { data, isLoading} = useGetLogsQuery({dateStart: "2025-07-02T05:55Z", dateStop: dateStop}, {pollingInterval: 10000})
+    const { data, isLoading} = useGetLastQuery({daysBefore: 30}, {pollingInterval: 10000})
     if(!isLoading){
-    elapsedTime = calcElapsedTime(data.assetQueryList.lastDate)
-    onlineSensorCount = data.assetQueryList.uniqueDispo[0] === null ? 0 : data.assetQueryList.uniqueDispo.length  
+        const ultimo = data.data.reduce((a: any,b: any) => new Date(a.ts_registrazione) > new Date(b.ts_registrazione) ? a : b)
+        console.log(ultimo)
+    elapsedTime = calcElapsedTime(ultimo.ts_registrazione)
+    onlineSensorCount = data?.data.length
     }
 
     return (

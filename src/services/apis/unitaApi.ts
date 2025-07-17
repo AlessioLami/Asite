@@ -11,10 +11,10 @@ const unitaApi = createApi({
             query: () => `get`,
         }),
         addUnita: builder.mutation({
-            query: (codifica: string) => ({
+            query: (codifica) => ({
                 url: "add",
                 method: "POST",
-                body: {codifica}
+                body: codifica
             })
         }),
         removeUnita: builder.mutation({

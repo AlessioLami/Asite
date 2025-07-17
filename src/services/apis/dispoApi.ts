@@ -24,9 +24,16 @@ const dispoApi = createApi({
                 body: {"idsToDelete": [`${id}`]}
             })
         }),
+        updateDispo: builder.mutation({
+            query: ({id, data}) => ({
+                url: `update/${id}`,
+                method: "PATCH",
+                body: data
+            })
+        })
     }),
 })
 
 export default dispoApi
-export const { useGetDispoQuery, useAddDispoMutation, useRemoveDispoMutation } = dispoApi
+export const { useGetDispoQuery, useAddDispoMutation, useRemoveDispoMutation, useUpdateDispoMutation } = dispoApi
 

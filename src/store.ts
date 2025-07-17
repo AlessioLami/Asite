@@ -7,6 +7,7 @@ import authSlice from "./services/slices/authSlice";
 import logsApi from "./services/apis/logsApi";
 import dispoApi from "./services/apis/dispoApi";
 import unitaApi from "./services/apis/unitaApi";
+import snifferApi from "./services/apis/snifferApi";
 
 const persistConfig = {
     key: "auth",
@@ -23,11 +24,12 @@ export const store = configureStore({
         [logsApi.reducerPath]: logsApi.reducer,
         [dispoApi.reducerPath]: dispoApi.reducer,
         [unitaApi.reducerPath]: unitaApi.reducer,
+        [snifferApi.reducerPath]: snifferApi.reducer,
         auth: persistedAuthReducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false
-    }).concat(authApi.middleware, whitelistApi.middleware, logsApi.middleware, dispoApi.middleware, unitaApi.middleware)
+    }).concat(authApi.middleware, whitelistApi.middleware, logsApi.middleware, dispoApi.middleware, unitaApi.middleware, snifferApi.middleware)
 })
 
 
