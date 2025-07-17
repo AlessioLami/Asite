@@ -3,13 +3,11 @@ import { FiArrowLeft, FiPlus } from "react-icons/fi"
 import {FaClipboardList } from "react-icons/fa"
 import { FaWeightScale } from "react-icons/fa6"
 import { IoIosNotifications } from "react-icons/io"
-import { MdSensors } from "react-icons/md"
+import { MdSensors, MdUpdate } from "react-icons/md"
 import { useAddWhitelistedUserMutation, useGetWhitelistedUsersQuery, useRemoveWhitelistedUserMutation } from "../services/apis/whitelistApi"
 import { Toaster, toast } from "sonner"
 import { useAddDispoMutation, useGetDispoQuery, useRemoveDispoMutation, useUpdateDispoMutation } from "../services/apis/dispoApi"
-import { useAddUnitaMutation, useGetUnitaQuery, useRemoveUnitaMutation } from "../services/apis/unitaApi"
-import { useSelector } from "react-redux"
-import type { RootState } from "@react-three/fiber"
+import { useAddUnitaMutation, useGetUnitaQuery, useRemoveUnitaMutation, useUpdateUnitaMutation } from "../services/apis/unitaApi"
 
 export type User = {
     email: string;
@@ -43,6 +41,11 @@ const Settings = () => {
     const [updatedMac, setUpdatedMac] = useState<string|null>(null)
     const [updatedCodifica, setUpdatedCodifica] = useState<string|null>(null)
     const [updateDispo] = useUpdateDispoMutation()
+    const [updateUnita] = useUpdateUnitaMutation()
+
+    const [updatedUnitaId, setUpdatedUnitaId] = useState<string|null>(null)
+    const [updatedCodificaUnita, setUpdatedCodificaUnita] = useState("")
+    const [updatedTempLimit, setUpdatedTempLimit] = useState(50)
 
     const [remove] = useRemoveWhitelistedUserMutation()
     const [removeDispo] = useRemoveDispoMutation()
@@ -184,6 +187,18 @@ const Settings = () => {
         }
     }
 
+    const handleUpdateUnita = async(e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        try{
+
+        await updateUnita({id: updatedUnitaId, data : {codifica: updatedCodificaUnita, tempLimit: updatedTempLimit}})
+        toast.success("Dispositivo aggiornato con successo")
+        await refetchUnita()
+        } catch(error){
+            toast.error("C'è stato un errore nell'aggiornamento di un dispositivo.")
+        }
+    }
+
     return(
         <div className="flex h-screen w-full">
             <Toaster position="top-center" richColors/>
@@ -249,7 +264,7 @@ const Settings = () => {
                                     return <option key={id} value={unita._id}>{unita.codifica.toUpperCase()}</option>
                                 })}
                             </select>
-                            <button type="submit" className="px-4 bg-gray-300 rounded-xl flex justify-center items-center leading-none gap-3 align-middle"><FiPlus/> Aggiungi</button>
+                            <button type="submit" className="px-4 bg-green-500 rounded-xl flex justify-center items-center leading-none gap-3 align-middle text-white font-semibold"><FiPlus/> Aggiungi</button>
                         </form>
                          <form onSubmit={handleUpdateDispo} className="flex w-full gap-2">
                             <select  onChange={(e) => setUpdatedId(e.target.value)} className="p-2 border-3 rounded-lg w-full">
@@ -261,7 +276,7 @@ const Settings = () => {
                                 <option value={"installato"}>Installato'</option>
                                 <option value={"test"}>Test</option>
                             </select>
-                            <button type="submit" className="px-4 bg-gray-300 rounded-xl flex justify-center items-center leading-none gap-3 align-middle"><FiPlus/> Aggiungi</button>
+                            <button type="submit" className="px-4 bg-blue-500 rounded-xl flex justify-center items-center leading-none gap-3 align-middle text-white font-semibold"><MdUpdate/> Aggiorna</button>
                         </form>
                         <table className="w-full border-3 rounded-xl text-left">
                             <thead className="bg-gray-100">
@@ -295,10 +310,19 @@ const Settings = () => {
             {section == "unita" && (
                 <div className="p-10 flex flex-col gap-3 w-full">
                         <h1 className="text-4xl font-bold">UNITA' MISURATE</h1>
+
                         <form onSubmit={handleAddUnita} className="flex w-full gap-2">
                             <input onChange={(e) => setCodificaUnita(e.target.value)} placeholder="Codifica dell'unità." className="p-2 border-3 rounded-lg w-full"/>
                             <input type="number" onChange={(e) => setTempLimit(parseInt(e.target.value))} placeholder="Temperatura Limite." className="p-2 border-3 rounded-lg w-full"/>
-                            <button type="submit" className="px-4 bg-gray-300 rounded-xl flex justify-center items-center leading-none gap-3 align-middle"><FiPlus/> Aggiungi</button>
+                            <button type="submit" className="px-4 bg-green-500 rounded-xl flex justify-center items-center leading-none gap-3 align-middle text-white font-semibold"><FiPlus/> Aggiungi</button>
+                        </form>
+                        <form onSubmit={handleUpdateUnita} className="flex w-full gap-2">
+                            <select  onChange={(e) => setUpdatedUnitaId(e.target.value)} className="p-2 border-3 rounded-lg w-full">
+                                {unitaList.length > 0 ? unitaList.map((unita: Unita) => <option value={unita._id}>{unita.codifica.toUpperCase()}</option>) : "Non ci sono dispositivi registrati."}
+                            </select>
+                            <input onChange={(e) => setUpdatedCodificaUnita(e.target.value)} placeholder="Codifica dell'unità aggiornata." className="p-2 border-3 rounded-lg w-full"/>
+                            <input type="number" onChange={(e) => setUpdatedTempLimit(parseInt(e.target.value))} placeholder="Temperatura Limite aggiornata." className="p-2 border-3 rounded-lg w-full"/>
+                            <button type="submit" className="px-4 bg-blue-500 rounded-xl flex justify-center items-center leading-none gap-3 align-middle text-white font-semibold"><MdUpdate/> Aggiorna</button>
                         </form>
                         <table className="w-full border-3 rounded-xl text-left">
                             <thead className="bg-gray-100">

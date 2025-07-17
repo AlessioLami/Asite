@@ -23,11 +23,18 @@ const unitaApi = createApi({
                 method: "DELETE",
                 body: {idsToDelete: `${id}`}
             })
+        }),
+        updateUnita: builder.mutation({
+            query: ({id, data}) => ({
+                url: `update/${id}`,
+                method: "PATCH",
+                body: data
+            })
         })
     }),
 
 })
 
-export const { useGetUnitaQuery, useAddUnitaMutation, useRemoveUnitaMutation } = unitaApi
+export const { useGetUnitaQuery, useAddUnitaMutation, useRemoveUnitaMutation, useUpdateUnitaMutation } = unitaApi
 export default unitaApi
 
