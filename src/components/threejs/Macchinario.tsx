@@ -10,16 +10,23 @@ export type ErrorProps = {
 }
 
 
-const Macchinario = () => {
+
+const Macchinario = (sensorData: any) => {
+
+
+    const hasError = (unita: string) => {
+        return sensorData.sensorData.sensorData.some((s: any) => s.unita_misurata === unita && s.isInTempAlarm === true);
+    }
+
 
     return(
         <group>
-            <Conveyor hasError={false}/>
-            <Conveyor2 hasError={true}/>
-            <Conveyor3 hasError={true}/>
-            <Conveyor4 hasError={false}/>
-            <BagOpener hasError={false}/>
-            <Vaglio hasError={true}/>
+            <Conveyor hasError={hasError("conveyor")}/>
+            <Conveyor2 hasError={hasError("conveyor2")}/>
+            <Conveyor3 hasError={hasError("conveyor3")}/>
+            <Conveyor4 hasError={hasError("conveyor4")}/>
+            <BagOpener hasError={hasError("aprisacchi")}/>
+            <Vaglio hasError={hasError("vaglio")}/>
         </group>
     )
 }

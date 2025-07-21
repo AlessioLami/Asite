@@ -8,7 +8,7 @@ import ClampControls from "./ClampControls";
 
 
 
-const InteractivePanel = () => {
+const InteractivePanel = (sensorData: any) => {
 
   const { progress } = useProgress()
 
@@ -20,6 +20,8 @@ const InteractivePanel = () => {
   const controlsRef = useRef(null)
 
 
+
+
   return (
     <div className="relative z-1 w-full h-screen">
     {progress < 100 && (<div className="absolute w-full h-full flex bg-gray-400 justify-center items-center font-black text-5xl text-white">Caricando i modelli... {Math.round(progress)}%</div>)}
@@ -28,7 +30,7 @@ const InteractivePanel = () => {
           <ambientLight intensity={10} />
           <directionalLight position={[5, 5, 5]} intensity={10} />
           <Pavimento />
-          <Macchinario />
+          <Macchinario sensorData={sensorData} />
           <OrbitControls
             ref={controlsRef}
             enableRotate={false}

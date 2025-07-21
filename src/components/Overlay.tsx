@@ -12,19 +12,10 @@ export interface OverlayProps {
     errorCount: number;
     onlineSensorCount: number;
     elapsedTime: string;
+    errors: any;
 }
 
-const errors = [
-    {"id": 1, "description": "Motore sovvrariscaldato.", "timestamp": "2025-07-10"},
-    {"id": 2, "description": "Il sensore non trasmette da piu di 1 ora.", "timestamp": "2025-07-10"},
-    {"id": 3, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
-    {"id": 5, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
-    {"id": 6, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
-    {"id": 7, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"},
-    {"id": 8, "description": "Il motore non gira alla velocità giusta.", "timestamp": "2025-07-10"}
-]
-
-const Overlay = ({email, role, errorCount, onlineSensorCount, elapsedTime} : OverlayProps) => {
+const Overlay = ({email, role, errorCount, onlineSensorCount, elapsedTime, errors} : OverlayProps) => {
 
     const [logout] = useLogoutMutation()
     const dispatch = useDispatch()
@@ -49,7 +40,7 @@ const Overlay = ({email, role, errorCount, onlineSensorCount, elapsedTime} : Ove
                    <div className="flex flex-col gap-2">
                     <h1 className="text-4xl font-black text-white">STATO: {errorCount === 0 ? <span className="text-green-500">OK</span> : <span className="text-red-500">KO</span>}</h1>
                     <h1 className="text-4xl font-black text-white">ERRORI: <span className={errorCount === 0 ? "text-green-500" : "text-red-500"}>{errorCount}</span></h1>
-                    <h1 className="text-2xl font-black text-white">SENSORI ONLINE: <span className="text-blue-500">{onlineSensorCount}<span className="text-white">/</span><span className="text-green-500">18</span></span></h1>
+                    <h1 className="text-2xl font-black text-white">SENSORI ONLINE: <span className="text-blue-500">{onlineSensorCount}</span></h1>
                     <h1 className="text-xl font-black text-white">ULTIMA RICEZIONE: <span className="text-blue-500">{elapsedTime}</span></h1></div> 
                 </div>
                 <div className="flex flex-col gap-3">
@@ -74,10 +65,10 @@ const Overlay = ({email, role, errorCount, onlineSensorCount, elapsedTime} : Ove
             <div className="bg-black/25 w-full p-5 h-full flex flex-col gap-10 pointer-events-auto max-w-[360px]">
                 <h1 className="text-4xl font-black text-white">LISTA ERRORI</h1>
                 <div className="flex flex-col gap-3 overflow-y-scroll scrollbar-custom">
-                    {errors.map((error) => {
+                    {errors.map((error: any) => {
                         return(
                             <div key={error.id} className="flex flex-col bg-red-500/50 p-2 rounded-xl">
-                                <h1 className="text-white font-bold">ID Errore: {error.id}</h1>
+                                <h1 className="text-white font-bold">Dispositivo: {error.codifica}</h1>
                                 <p className="text-white font-semibold">{error.description}</p>
                                 <p className="text-gray-400 font-medium">{error.timestamp}</p>
                             </div>

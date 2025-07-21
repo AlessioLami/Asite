@@ -1,5 +1,6 @@
 import { FiArrowLeft } from 'react-icons/fi';
 import { useGetSnifferQuery } from '../services/apis/snifferApi';
+import { DateTime } from 'luxon';
 
 const Sniffer = () => {
 
@@ -10,7 +11,6 @@ const Sniffer = () => {
   }
 
   const latestLogMap = new Map();
-  console.log(data)
 
   if(data?.logSniffer){
     for(const log of data.logSniffer){
@@ -76,18 +76,17 @@ const Sniffer = () => {
                             <tbody>
                                 {data?.logSniffer.length > 0 ? data?.logSniffer.map((log: any, id: number) => {
                                     
-                                    const date = new Date(log.ts_registrazione)
-                                    const month = date.getMonth()
-                                    const day = date.getDay()
-                                    const hours = date.getHours()
-                                    const minutes = date.getMinutes()
+                                   const formattedDate = DateTime
+                                .fromISO(log.ts_registrazione, { zone: 'utc' }) 
+                                .setZone('local') 
+                                .toFormat('dd-MM HH:mm');  
 
                                     return(
                                         <tr key={id}>
                                             <td className="py-2 px-4 text-center">{log.sniffer_codifica}</td>
                                             <td className='py-2 px-4 text-center'>{log.mac_sniffer}</td>
                                             <td className="py-2 px-4 text-center">{convertToPercent(log.batt_level).toPrecision(2)}%</td>
-                                            <td className='py-2 px-4 text-center'>{`${day}-${month} ${hours}:${minutes}`}</td>
+                                            <td className='py-2 px-4 text-center'>{formattedDate}</td>
                                         </tr>
                                     )
                                 }): <tr><td colSpan={4} className="text-center w-full text-xl p-5 font-semibold">Non ci sono log in questo periodo.</td></tr>}

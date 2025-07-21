@@ -21,6 +21,7 @@ export type Dispo = {
     mac: string;
     codifica: string;
     unita_misurata: any;
+    type: string;
 } 
 
 export type Unita = {
@@ -37,13 +38,13 @@ const Settings = () => {
     const [addDispo] = useAddDispoMutation()
     const [addUnita] = useAddUnitaMutation()
 
-    const [updatedId, setUpdatedId] = useState<string|null>(null)
-    const [updatedMac, setUpdatedMac] = useState<string|null>(null)
-    const [updatedCodifica, setUpdatedCodifica] = useState<string|null>(null)
+    const [updatedId, setUpdatedId] = useState<string|null>("")
+    const [updatedMac, setUpdatedMac] = useState<string|null>("")
+    const [updatedCodifica, setUpdatedCodifica] = useState<string|null>("")
     const [updateDispo] = useUpdateDispoMutation()
     const [updateUnita] = useUpdateUnitaMutation()
 
-    const [updatedUnitaId, setUpdatedUnitaId] = useState<string|null>(null)
+    const [updatedUnitaId, setUpdatedUnitaId] = useState<string|null>("")
     const [updatedCodificaUnita, setUpdatedCodificaUnita] = useState("")
     const [updatedTempLimit, setUpdatedTempLimit] = useState(50)
 
@@ -117,7 +118,7 @@ const Settings = () => {
     const handleAddDispo = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         try{
-            const res = unitaMisurata ? await addDispo({mac: mac, codifica: codificaDispo, unita_misurata: unitaMisurata}) : await addDispo({mac: mac, codifica: codifica})
+            const res = unitaMisurata ? await addDispo({mac: mac, codifica: codificaDispo, unita_misurata: unitaMisurata}) : await addDispo({mac: mac, codifica: codificaDispo})
             if(res.error && "data" in res.error && (res.error.data as any)?.message){
                 toast.error((res.error.data as any).message)
             }else{
@@ -161,7 +162,14 @@ const Settings = () => {
     }
 
     const handleUpdateDispo = async(e: React.FormEvent<HTMLFormElement>) => {
+
         e.preventDefault()
+
+        if(updatedId == null || updatedId===""){
+            toast.error("Scegli un dispositivo nella lista.")
+            return;
+        }
+
         try{
 
         await updateDispo({id: updatedId, data : {mac: updatedMac, codifica: updatedCodifica, type: type}})
@@ -267,11 +275,21 @@ const Settings = () => {
                             <button type="submit" className="px-4 bg-green-500 rounded-xl flex justify-center items-center leading-none gap-3 align-middle text-white font-semibold"><FiPlus/> Aggiungi</button>
                         </form>
                          <form onSubmit={handleUpdateDispo} className="flex w-full gap-2">
-                            <select  onChange={(e) => setUpdatedId(e.target.value)} className="p-2 border-3 rounded-lg w-full">
+                            <select  value={updatedId??""} onChange={(e) => {
+                                const selectedId = e.target.value;
+                                setUpdatedId(selectedId)
+                                const selectedDispo = dispoList.find((dispo: Dispo) => dispo._id === selectedId)
+                                if(selectedDispo){
+                                    setUpdatedCodifica(selectedDispo.codifica);
+                                    setUpdatedMac(selectedDispo.mac);
+                                    setType(selectedDispo.type);
+                                }
+                            }} className="p-2 border-3 rounded-lg w-full">
+                                <option value="" disabled>Seleziona un dispositivo da aggiornare.</option>
                                 {dispoList.length > 0 ? dispoList.map((dispo: Dispo) => <option value={dispo._id}>{dispo.codifica}</option>) : "Non ci sono dispositivi registrati."}
                             </select>
-                            <input onChange={(e) => setUpdatedCodifica(e.target.value)} placeholder="Codifica aggiornata." className="p-2 border-3 rounded-lg w-full"/>
-                            <input onChange={(e) => setUpdatedMac(e.target.value)} placeholder="MAC aggiornato." className="p-2 border-3 rounded-lg w-full"/>
+                            <input value={updatedCodifica??""} onChange={(e) => setUpdatedCodifica(e.target.value)} placeholder="Codifica aggiornata." className="p-2 border-3 rounded-lg w-full"/>
+                            <input value={updatedMac??""} onChange={(e) => setUpdatedMac(e.target.value)} placeholder="MAC aggiornato." className="p-2 border-3 rounded-lg w-full"/>
                             <select className="p-3 rounded-lg border-3" onChange={(e) => setType(e.target.value)}>
                                 <option value={"installato"}>Installato'</option>
                                 <option value={"test"}>Test</option>

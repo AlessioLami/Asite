@@ -1,31 +1,39 @@
 import { useState } from 'react';
 import { Calendar } from '../components/ui/calendar';
-import type { DateRange } from 'react-day-picker';
 import { FiArrowLeft } from 'react-icons/fi';
 import { useGetLogsQuery } from '../services/apis/logsApi';
+import { DateTime } from "luxon"
+import { toast, Toaster } from 'sonner';
+
+type DateRange = {
+  from: Date;
+  to: Date;
+}
 
 const Dispositivi = () => {
-  const today = new Date();
+  const today = new Date(); 
   const fiveDaysAgo = new Date();
-  fiveDaysAgo.setDate(today.getDate() - 14);
+  fiveDaysAgo.setDate(today.getDate()-5);
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: fiveDaysAgo,
     to: today,
   });
 
-  const handleDateChange = (range: DateRange | undefined) => {
-    setDateRange(range);
+  const handleDateChange = (range: {from?: Date, to?: Date}) => {
+    if(!range.from || !range.to) return;
+    setDateRange({from: range.from, to: range.to})
+
     refetch()
   };
 
   const { data, error, refetch } = useGetLogsQuery({
-    dateStart: dateRange?.from?.toISOString(),
-    dateStop: dateRange?.to?.toISOString(),
+    dateStart: dateRange? DateTime.fromJSDate(dateRange.from).toISO({includeOffset: false}) : undefined,
+    dateStop: dateRange ? DateTime.fromJSDate(dateRange.to).toISO({includeOffset: false}) : undefined,
   });
 
   if(error){
-    refetch()
+    toast.error("Nessun log trovato in quel periodo.");
   }
 
   const latestLogMap = new Map();
@@ -62,6 +70,7 @@ const Dispositivi = () => {
 
   return (
     <div className="flex p-10 gap-10">
+      <Toaster position='top-center' richColors/>
       <div className="flex flex-col gap-10 w-full max-w-[300px]">
         <div className="flex flex-col gap-3">
           <a
@@ -74,6 +83,7 @@ const Dispositivi = () => {
         </div>
         <Calendar
           mode="range"
+          required={true}
           selected={dateRange}
           onSelect={handleDateChange}
           className="mx-[-20px] py-2 w-full"
@@ -81,8 +91,8 @@ const Dispositivi = () => {
         <div className='w-full flex flex-col justify-start text-start'>
            <h2 className='text-xl font-bold mb-2'>Livello di Batteria dei Sensori</h2> 
            <div className='w-full'>
-            {chartData.map((log) => (
-                (<div className='flex text-xs justify-between text-start font-semibold'>{log.name}<h1 className='rounded p-1 mt-1 pr-1 ' style={{width: `${log.percent-20}%`, backgroundColor: `${log.fill}`} }>{log.percent.toPrecision(2)}</h1></div>)
+            {chartData.map((log, id) => (
+                (<div key={id} className='flex text-xs justify-between text-start font-semibold'>{log.name}<h1 className='rounded p-1 mt-1 pr-1 ' style={{width: `${log.percent-20}%`, backgroundColor: `${log.fill}`} }>{log.percent.toPrecision(2)}</h1></div>)
             ))} 
            </div>
        </div>
@@ -100,18 +110,17 @@ const Dispositivi = () => {
                             <tbody>
                                 {data?.logDispo.length > 0 ? data?.logDispo.map((log: any, id: number) => {
                                     
-                                    const date = new Date(log.ts_registrazione)
-                                    const month = date.getMonth()
-                                    const day = date.getDay()
-                                    const hours = date.getHours()
-                                    const minutes = date.getMinutes()
+                                 const formattedDate = DateTime
+                                .fromISO(log.ts_registrazione, { zone: 'utc' }) 
+                                .setZone('local') 
+                                .toFormat('dd-MM HH:mm'); 
 
                                     return(
                                         <tr key={id}>
                                             <td className="py-2 px-4 text-center">{log.codifica}</td>
                                             <td className='py-2 px-4 text-center'>{log._id}</td>
                                             <td className="py-2 px-4 text-center">{convertToPercent(log.batt_level).toPrecision(2)}%</td>
-                                            <td className='py-2 px-4 text-center'>{`${day}-${month} ${hours}:${minutes}`}</td>
+                                            <td className='py-2 px-4 text-center'>{formattedDate}</td>
                                         </tr>
                                     )
                                 }): <tr><td colSpan={4} className="text-center w-full text-xl p-5 font-semibold">Non ci sono log in questo periodo.</td></tr>}

@@ -36,6 +36,17 @@ const Conveyor4 = ({hasError}: ErrorProps) => {
           */}
           </group> 
         ))} 
+        {!hasError && (
+           <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[-5, -0.4, -9.3]}>
+            <boxGeometry args={[21, 1.5]} />
+            <meshBasicMaterial
+              color="green"
+              transparent
+              opacity={0.5}
+              depthWrite={false}
+            />
+          </mesh> 
+        )}
     </>
   ) 
 }

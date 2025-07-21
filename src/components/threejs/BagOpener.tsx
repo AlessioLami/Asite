@@ -35,6 +35,17 @@ const BagOpener = ({hasError} : ErrorProps) => {
             */}
            </group> 
         )} 
+        {!hasError && (
+          <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[6.3, -0.4, -2.8]}>
+                <boxGeometry args={[5.5, 2.7]} />
+                <meshBasicMaterial
+                    color="green"
+                    transparent
+                    opacity={0.5}
+                    depthWrite={false}
+                />
+            </mesh> 
+        )}
     </>
   ) 
 }
