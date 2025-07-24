@@ -51,7 +51,7 @@ const Dispositivi = () => {
     return filtroTipo === "tutti" ? nomeMatch : nomeMatch && filtroMatch;
   });
 
-  const dispositiviUnici = Array.from(new Set(filteredLogs?.map((log: any) => log.codifica)));
+  const dispositiviUnici : string[] = Array.from(new Set(filteredLogs?.map((log: any) => log.codifica)));
 
   useEffect(() => {
     if (dispositiviUnici.length > 0 && !dispositivoSelezionatoTemperature) {

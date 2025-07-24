@@ -37,8 +37,8 @@ const Dashboard = () => {
     let elapsedTime = ""
     let onlineSensorCount = 0
     let errorCount = 0
-    let erroriAttendibili = []
-    let erroriNonAttendibili = []
+    let erroriAttendibili: any[] = []
+    let erroriNonAttendibili : any[] = []
     
     
 
