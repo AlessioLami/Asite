@@ -23,7 +23,7 @@ const InteractivePanel = (sensorData: any) => {
 
 
   return (
-    <div className="relative z-1 w-full h-screen">
+    <div className="relative z-1 w-full max-w-[1000px] max-h-[calc(100vh-80px)]" >
     {progress < 100 && (<div className="absolute w-full h-full flex bg-gray-400 justify-center items-center font-black text-5xl text-white">Caricando i modelli... {Math.round(progress)}%</div>)}
       <Canvas dpr={[1,2]} performance={{min: 0.5, max: 1}}shadows>
           <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={40} />
