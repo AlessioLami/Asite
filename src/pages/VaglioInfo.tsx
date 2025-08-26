@@ -1,6 +1,5 @@
 import * as THREE from "three"
 import { Html, OrbitControls, OrthographicCamera, useGLTF } from "@react-three/drei"
-import ClampControls from "../components/threejs/ClampControls"
 import Pavimento from "../components/threejs/Pavimento"
 import { Canvas } from "@react-three/fiber"
 import { useRef } from "react"
@@ -9,26 +8,22 @@ import { FaArrowLeft } from "react-icons/fa"
 
 const VaglioInfo = () => {
 
-    const { scene } = useGLTF("src/assets/models/vaglio2.glb");
-    scene.scale.set(4, 5, 5)
-    scene.position.set(0, 0, 0)
-    scene.rotation.set(0, Math.PI / 2, 0)
-    const LIMITS = {
-        min: new THREE.Vector3(-1.5, -1.5, -1.5),
-        max: new THREE.Vector3(1.5, 1.5, 1.5)
-    }
-  
-  const controlsRef = useRef(null)
-  const navigate = useNavigate();
+    const { scene } = useGLTF("src/assets/models/vaglio.glb");
+    scene.scale.set(100, 100, 100)
+    scene.position.set(4, 0, 7)
+    scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (0 * Math.PI) / 180)
+
+    const controlsRef = useRef(null)
+    const navigate = useNavigate();
 
     return(
           <div className="h-screen w-full flex justify-center items-center">
             <div className="absolute z-100 pointer-events-none flex w-full h-full p-10">
                 <div>
                     <h1 onClick={() => navigate("/dashboard")} className="pointer-events-auto flex text-black font-black align-middle truncate items-center gap-2 text-xl bg-white"><FaArrowLeft/> TORNA ALLA PANORAMICA</h1>
-                    <h1 className="text-white font-black text-5xl">VAGLIO</h1>
+                    <h1 className="text-black font-black text-5xl">VAGLIO</h1>
                     <div className="flex flex-col">
-                        <h1 className="text-white font-black text-3xl">ERRORI:</h1>
+                        <h1 className="text-black font-black text-3xl">ERRORI:</h1>
                         <div className="flex flex-col">
 
                         </div>
@@ -59,14 +54,13 @@ const VaglioInfo = () => {
                 <Pavimento/>
                 <OrbitControls
                     ref={controlsRef}
-                    enableRotate={false}
+                    enableRotate={true}
                     enablePan={true}
                     enableZoom={true}
                     minZoom={40}
                     maxZoom={100}
                     mouseButtons={{LEFT: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE}}
                 />
-                <ClampControls controlsRef={controlsRef} limits={LIMITS}/>
             </Canvas>
         </div>  
     )

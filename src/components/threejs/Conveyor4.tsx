@@ -1,54 +1,120 @@
-import { useGLTF } from '@react-three/drei'
-import { useRef } from 'react'
-import * as THREE from 'three'
-import type { ErrorProps } from './Macchinario'
-import { useNavigate } from 'react-router-dom'
+import { Html, useGLTF } from "@react-three/drei";
+import { useRef, useEffect, useMemo } from "react";
+import * as THREE from "three";
+import type { ErrorProps } from "./Macchinario";
+import { useNavigate } from "react-router-dom";
+import { useFrame } from "@react-three/fiber";
 
-const Conveyor4 = ({hasError}: ErrorProps) => {
+const EDGES_KEY = "_edgesHelper";
 
-  const { scene } = useGLTF('src/assets/models/conveyor4.glb')
-  const glowRef = useRef<THREE.Mesh>(null)
+const Conveyor4 = ({ hasError }: ErrorProps) => {
+  const { scene } = useGLTF("src/assets/models/rullo4.glb");
+  const glowRef = useRef<THREE.Mesh>(null);
+  const navigate = useNavigate();
 
-  scene.scale.set(3, 1, 1)
-  scene.position.set(-3.8, 0, -9.3)
-  scene.rotation.set(0, -Math.PI * 2, 0)
-  const navigate = useNavigate()
+  // posa del modello
+  scene.scale.set(50, 50, 50);
+  scene.position.set(3, 0, -6.15);
+  scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (90 * Math.PI) / 180);
 
-  return(
+  // centro bbox per posizionare la label Html
+  const center = useMemo(() => {
+    scene.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(scene);
+    const c = new THREE.Vector3();
+    box.getCenter(c);
+    c.y += (box.getSize(new THREE.Vector3()).y || 1) * 0.6;
+    return c;
+  }, [scene]);
+
+  // emissive + contorni sugli oggetti mesh
+  useEffect(() => {
+    scene.traverse((o: any) => {
+      if (!o.isMesh) return;
+
+      if (!o.material?.isMeshStandardMaterial) {
+        o.material = new THREE.MeshStandardMaterial({
+          color: o.material?.color ?? new THREE.Color("#a0d6a0"),
+          metalness: 0.05,
+          roughness: 0.85,
+        });
+      }
+      const mat = o.material as THREE.MeshStandardMaterial;
+
+      if (hasError) {
+        mat.emissive.set(0xff3b3b);
+        mat.emissiveIntensity = 0.28;
+      } else {
+        mat.emissive.set(0x000000);
+        mat.emissiveIntensity = 0;
+      }
+
+      if (hasError && !o.userData[EDGES_KEY]) {
+        const eg = new THREE.EdgesGeometry(o.geometry, 18);
+        const lm = new THREE.LineBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.95,
+          depthTest: false,
+        });
+        const lines = new THREE.LineSegments(eg, lm);
+        lines.renderOrder = 9999;
+        o.add(lines);
+        o.userData[EDGES_KEY] = lines;
+      } else if (!hasError && o.userData[EDGES_KEY]) {
+        const lines: THREE.LineSegments = o.userData[EDGES_KEY];
+        o.remove(lines);
+        lines.geometry.dispose();
+        (lines.material as THREE.Material).dispose();
+        o.userData[EDGES_KEY] = undefined;
+      }
+
+      o.castShadow = true;
+      o.receiveShadow = true;
+    });
+  }, [scene, hasError]);
+
+  // pulsazione glow
+  useFrame(() => {
+    if (!hasError || !glowRef.current) return;
+    const m = glowRef.current.material as THREE.MeshBasicMaterial;
+    const t = performance.now() * 0.004;
+    m.opacity = 0.35 + 0.15 * Math.sin(t);
+  });
+
+  return (
     <>
-        <primitive object={scene} onClick={() => navigate("/conveyor4")}/>
-        {(hasError && (
-          <group>
-            <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[-5, -0.4, -9.3]}>
-            <boxGeometry args={[21, 1.5]} />
-            <meshBasicMaterial
-              color="red"
-              transparent
-              opacity={0.5}
-              depthWrite={false}
-            />
-          </mesh>  
-          {/*<Html position={[-8, 2, -8.4]} center scale={1.2}>
-            <div className='bg-red-500 text-white rounded-lg shadow-xl px-10 py-2 min-w-[250px] font-bold text-sm max-w-[400px] text-ellipsis'>
-              ⚠ Nastro bloccato
+      <primitive object={scene} onClick={() => navigate("/conveyor4")} />
+
+      {hasError && (
+        <>
+          <Html position={[center.x, center.y, center.z]} center distanceFactor={30} occlude>
+            <div
+              style={{
+                padding: "6px 10px",
+                borderRadius: 8,
+                background: "rgba(255,59,59,0.92)",
+                color: "white",
+                fontWeight: 700,
+                fontSize: 12,
+                boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              Rullo 4 ERRORE
             </div>
           </Html>
-          */}
-          </group> 
-        ))} 
-        {!hasError && (
-           <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[-5, -0.4, -9.3]}>
-            <boxGeometry args={[21, 1.5]} />
-            <meshBasicMaterial
-              color="green"
-              transparent
-              opacity={0.5}
-              depthWrite={false}
-            />
-          </mesh> 
-        )}
-    </>
-  ) 
-}
 
-export default Conveyor4
+          <group>
+            <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[1.5, 0, -13.77]}>
+              <boxGeometry args={[14, 1.2, 0.1]} />
+              <meshBasicMaterial color="#ff3b3b" transparent opacity={0.4} depthWrite={false} />
+            </mesh>
+          </group>
+        </>
+      )}
+    </>
+  );
+};
+
+export default Conveyor4;

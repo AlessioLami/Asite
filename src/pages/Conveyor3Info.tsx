@@ -9,10 +9,10 @@ import { FaArrowLeft } from "react-icons/fa"
 
 const Conveyor3Info = () => {
 
-    const { scene } = useGLTF("src/assets/models/conveyor3.glb");
-    scene.scale.set(2, 2, 2)
-    scene.position.set(0, 0, 0)
-    scene.rotation.set(0, -Math.PI / 2, 0)
+    const { scene } = useGLTF("src/assets/models/rullo3.glb");
+    scene.scale.set(100, 100, 100)
+    scene.position.set(0, 0, 10)
+    scene.rotation.set((-90 * Math.PI) / 180, 0, (-90 * Math.PI) / 180)
     const LIMITS = {
         min: new THREE.Vector3(-1.5, -1.5, -1.5),
         max: new THREE.Vector3(1.5, 1.5, 1.5)
@@ -26,9 +26,9 @@ const Conveyor3Info = () => {
             <div className="absolute z-100 pointer-events-none flex w-full h-full p-10">
                 <div>
                     <h1 onClick={() => navigate("/dashboard")} className="pointer-events-auto flex text-black font-black align-middle truncate items-center gap-2 text-xl bg-white"><FaArrowLeft/> TORNA ALLA PANORAMICA</h1>
-                    <h1 className="text-white font-black text-5xl">NASTRO TRASPORTATORE</h1>
+                    <h1 className="text-black font-black text-5xl">RULLO 3</h1>
                     <div className="flex flex-col">
-                        <h1 className="text-white font-black text-3xl">ERRORI:</h1>
+                        <h1 className="text-black font-black text-3xl">ERRORI:</h1>
                         <div className="flex flex-col">
 
                         </div>

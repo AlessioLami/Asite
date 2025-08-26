@@ -9,7 +9,8 @@ const Pavimento = () => {
 
     return(
         <mesh rotation={[-Math.PI/2, 0, 0]} receiveShadow>
-            <planeGeometry args={[200, 200]}/>
+            <planeGeometry args={[0, 0]}/>
+            <shadowMaterial opacity={0.3}/>
             <meshStandardMaterial map={texture}/>
         </mesh>
     )

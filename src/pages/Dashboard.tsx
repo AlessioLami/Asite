@@ -9,6 +9,7 @@ import { VscSettings} from "react-icons/vsc"
 import {BsCpuFill} from "react-icons/bs"
 import { FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../services/slices/authSlice.ts";
 
 const calcElapsedTime = (data : string) => {
     const delta = Date.now() - new Date(data).getTime();
@@ -44,7 +45,7 @@ const Dashboard = () => {
 
 
 
-        const { data, isLoading} = useGetLastQuery({daysBefore: 30}, {pollingInterval: 3000})
+        const { data, isLoading} = useGetLastQuery({daysBefore: 60}, {pollingInterval: 3000})
         if(!isLoading){
         const ultimo = data.data.reduce((a: any,b: any) => DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b)
         const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione).toLocal().plus({hours: 2});
@@ -76,26 +77,7 @@ const Dashboard = () => {
 
 
         
-        /*.map((item: any) => {  
-            const {itemData} = getDispoData(item._id)
-            const tempLimit = itemData.tempLimit; const temp = itemData.temp;
-
-            const messaggio = tempLimit !== undefined ? `Temperature oltre la soglia: ${temp.toFixed(1)}°C > ${tempLimit.toFixed(1)}` 
-            : `Temperatura oltre la soglia: ${temp.toFixed(1)}°C (limite non disponibile)`
-            return {
-                codifica: item.dispo_codifica,
-                messaggio,
-                timestap: item.ts_registrazione
-            }
-        })
-
-        console.log(errorList)
-        Im making a hacking device for ethical use that has a core mcu (esp32-fn8) and a co-mcu (stm32f103c8t6). The esp32-s3 is the "brain"
-        and controls the display, the buttons, and sends commands to the co-mcu (stm32) via UART (tx, rx). The co-mcu (stm32) is wired to all
-        the peripherals: ST25R for NFC/RFID, IR leds, CC1101 for Sub-GHz and the user's GPIOs (SPI, UART, I2C). It also supports a crypto IC
-        (still need to search one) that basically makes the device a crypto-wallet too! (Would like to expand on paying and selling with crypto.) 
-        (And/Or make a crypto coin for the Nemesis device!!!).
-        */
+      
     }
 
     const navigate = useNavigate()
@@ -103,8 +85,6 @@ const Dashboard = () => {
     return (
             <div className="relative w-full overflow-y-hidden h-screen bg-gray-800">
                 {//<Overlay email={user} role={role} errorCount={errorCount} onlineSensorCount={onlineSensorCount} elapsedTime={elapsedTime} errors={errorList}
-            ///>
-            //{!isLoading && <InteractivePanel sensorData={data.data}/>
             }
 
                <div className="h-full">
@@ -137,7 +117,7 @@ const Dashboard = () => {
                             <button onClick={() => navigate("/settings")}className="flex items-center hover:cursor-pointer hover:bg-gray-900/69 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3"><VscSettings className="mr-2"/>Impostazioni</button>
                         </div> 
 
-                        <button className="flex items-center text-xl font-bold hover:cursor-pointer hover:bg-blue-600/10 text-blue-500 bg-blue-600/20 w-full rounded-xl p-3"><FiLogOut className="mr-2"/>Logout</button>
+                        <button onClick={() => logout()}className="flex items-center text-xl font-bold hover:cursor-pointer hover:bg-blue-600/10 text-blue-500 bg-blue-600/20 w-full rounded-xl p-3"><FiLogOut className="mr-2"/>Logout</button>
                     </div>
                     {!isLoading && <InteractivePanel sensorData={data.data}/>}
                     <div className="h-screen w-[500px] px-3">

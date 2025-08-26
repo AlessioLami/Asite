@@ -7,25 +7,27 @@ import { useFrame } from "@react-three/fiber";
 
 const EDGES_KEY = "_edgesHelper";
 
-const Conveyor2 = ({ hasError }: ErrorProps) => {
-  const { scene } = useGLTF("src/assets/models/rullo2.glb");
+const Conveyor6 = ({ hasError }: ErrorProps) => {
+  const { scene } = useGLTF("src/assets/models/rullo6.glb");
   const glowRef = useRef<THREE.Mesh>(null);
   const navigate = useNavigate();
 
+  // posa modello
   scene.scale.set(50, 50, 50);
-  scene.position.set(3, 0, -6);
-  scene.rotation.set((-90 * Math.PI) / 180, 0, (-90 * Math.PI) / 180);
+  scene.position.set(3, 0, -5.15);
+  scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (90 * Math.PI) / 180);
 
+  // centro bbox per label
   const center = useMemo(() => {
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     const c = new THREE.Vector3();
     box.getCenter(c);
-    c.y += (box.getSize(new THREE.Vector3()).y || 1) * 0.6; // alza la label
+    c.y += (box.getSize(new THREE.Vector3()).y || 1) * 0.6;
     return c;
   }, [scene]);
 
-  // emissive + contorni on/off
+  // emissive + contorni
   useEffect(() => {
     scene.traverse((o: any) => {
       if (!o.isMesh) return;
@@ -72,17 +74,17 @@ const Conveyor2 = ({ hasError }: ErrorProps) => {
     });
   }, [scene, hasError]);
 
-  // pulse del pannello rosso
+  // pulsazione glow
   useFrame(() => {
     if (!hasError || !glowRef.current) return;
     const m = glowRef.current.material as THREE.MeshBasicMaterial;
     const t = performance.now() * 0.004;
-    m.opacity = 0.35 + 0.15 * Math.sin(t); // 0.2–0.5
+    m.opacity = 0.35 + 0.15 * Math.sin(t);
   });
 
   return (
     <>
-      <primitive object={scene} onClick={() => navigate("/conveyor2")} />
+      <primitive object={scene} onClick={() => navigate("/conveyor6")} />
 
       {hasError && (
         <>
@@ -99,17 +101,17 @@ const Conveyor2 = ({ hasError }: ErrorProps) => {
                 border: "1px solid rgba(255,255,255,0.2)",
               }}
             >
-              Rullo 2 ERRORE
+              Rullo 6 ERRORE
             </div>
           </Html>
 
           <group>
             <mesh
               ref={glowRef}
-              rotation={[(-90 * Math.PI) / 180, 0, (-90 * Math.PI) / 180]}
-              position={[4.8, 0, -11]}
+              rotation={[-Math.PI / 2, 0, (90 * Math.PI) / 180]}
+              position={[0.9, 0, -3]}
             >
-              <boxGeometry args={[9, 1, 0.1]} />
+              <boxGeometry args={[5.5, 1.2, 0.1]} />
               <meshBasicMaterial color="#ff3b3b" transparent opacity={0.4} depthWrite={false} />
             </mesh>
           </group>
@@ -119,4 +121,4 @@ const Conveyor2 = ({ hasError }: ErrorProps) => {
   );
 };
 
-export default Conveyor2;
+export default Conveyor6;

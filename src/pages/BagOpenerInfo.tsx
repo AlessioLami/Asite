@@ -10,14 +10,10 @@ import { FaArrowLeft } from "react-icons/fa";
 
 const BagOpenerInfo = () => {
     
-    const { scene } = useGLTF("src/assets/models/bagopener.glb");
-    scene.scale.set(0.0015, 0.002, 0.002)
-    scene.position.set(-1, 1, 2)
-    scene.rotation.set(-Math.PI/2, Math.PI, 0)
-    const LIMITS = {
-        min: new THREE.Vector3(-1.5, -1.5, -1.5),
-        max: new THREE.Vector3(1.5, 1.5, 1.5)
-    }
+    const { scene } = useGLTF("src/assets/models/aprisacchi.glb");
+    scene.scale.set(100, 100, 100)
+    scene.position.set(20, 0, 4)
+    scene.rotation.set(-90*Math.PI/180, 0, Math.PI/2)
   
   const controlsRef = useRef(null)
   const navigate = useNavigate()
@@ -52,14 +48,13 @@ const BagOpenerInfo = () => {
                 <Pavimento/>
                 <OrbitControls
                     ref={controlsRef}
-                    enableRotate={false}
+                    enableRotate={true}
                     enablePan={true}
                     enableZoom={true}
                     minZoom={40}
                     maxZoom={100}
                     mouseButtons={{LEFT: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE}}
                 />
-                <ClampControls controlsRef={controlsRef} limits={LIMITS}/>
             </Canvas>
         </div>
        

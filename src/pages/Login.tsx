@@ -3,7 +3,7 @@ import { useLoginMutation } from "../services/apis/authApi";
 import { setCredentials } from "../services/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { Toaster, toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate} from "react-router-dom";
 import type { RootState } from "../store";
 
 const Login = () => {
@@ -17,7 +17,7 @@ const Login = () => {
 
     const user = useSelector((state: RootState) => state.auth.user)
     if(user){
-        navigate("/dashboard")
+       return <Navigate to="/dashboard" replace/> 
     }
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
