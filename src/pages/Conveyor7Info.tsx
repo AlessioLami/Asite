@@ -13,7 +13,7 @@ type LogItem = {
   temp_calc?: number;
   tempLimit?: number;
   ts_registrazione: string | number | Date;
-  unita_misurata?: "M1" | "M2" | string;
+  unita_misurata?: "M12" | "M13" | "M14" | string;
   isInTempAlarm?: boolean;
 };
 
@@ -28,24 +28,35 @@ type ErrorItem = {
   unit?: string;
 };
 
-const ConveyorInfo = () => {
-  const navigate = useNavigate();
+const Conveyor7Info = () => {
   const controlsRef = useRef(null);
+  const navigate = useNavigate();
 
+  // Modello 3D + clone
+  const { scene } = useGLTF("src/assets/models/rullo7.glb") as any;
+  scene.scale.set(100, 100, 100);
+  scene.position.set(-7, 0, 5);
+  scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (180 * Math.PI) / 180);
+
+  const scene2 = scene.clone();
+  scene2.scale.set(5, 2, 2);
+  scene2.position.set(-19, 0, 0);
+  scene2.rotation.set(0, Math.PI, 0);
+
+  // Dati
   const { data, isLoading } = useGetLastQuery(
     { daysBefore: 60 },
     { pollingInterval: 3000 }
   );
 
-  // Dati di base
   const rows: LogItem[] = useMemo(
     () => (Array.isArray(data?.data) ? (data!.data as LogItem[]) : []),
     [data]
   );
 
-  // Solo M1/M2
+  // Solo M12/M13/M14
   const conveyorRows = useMemo(
-    () => rows.filter(r => ["M1", "M2"].includes(r?.unita_misurata ?? "")),
+    () => rows.filter(r => ["M10", "M11"].includes(r?.unita_misurata ?? "")),
     [rows]
   );
 
@@ -62,9 +73,8 @@ const ConveyorInfo = () => {
       .sort((a, b) => {
         const ta = new Date(a.ts_registrazione).getTime();
         const tb = new Date(b.ts_registrazione).getTime();
-        if (tb !== ta) return tb - ta; // più recente prima
-        // tie-breaker per lista stabile
-        return String(b.id).localeCompare(String(a.id));
+        if (tb !== ta) return tb - ta; // più recenti in alto
+        return String(b.id).localeCompare(String(a.id)); // tie-breaker
       })
       .map((e) => {
         const delta = Number(e.temp_calc ?? 0) - Number(e.tempLimit ?? 0);
@@ -83,14 +93,8 @@ const ConveyorInfo = () => {
       });
   }, [errorsData]);
 
-  const hasM1 = useMemo(() => errorsData.some(e => e?.unita_misurata === "M1"), [errorsData]);
-  const hasM2 = useMemo(() => errorsData.some(e => e?.unita_misurata === "M2"), [errorsData]);
-
-  // Modello 3D
-  const { scene } = useGLTF("src/assets/models/rullo1.glb") as any;
-  scene.scale.set(100, 100, 100);
-  scene.position.set(-4, 0, 2);
-  scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (90 * Math.PI) / 180);
+  const hasM10 = useMemo(() => errorsData.some(e => e?.unita_misurata === "M10"), [errorsData]);
+  const hasM11 = useMemo(() => errorsData.some(e => e?.unita_misurata === "M11"), [errorsData]);
 
   return (
     <div className="h-screen w-full flex justify-center items-center">
@@ -102,7 +106,7 @@ const ConveyorInfo = () => {
           >
             <FaArrowLeft /> TORNA ALLA PANORAMICA
           </h1>
-          <h1 className="text-black font-black text-5xl">RULLO 1</h1>
+          <h1 className="text-black font-black text-5xl">RULLO 7</h1>
 
           <div className="flex flex-col">
             <h1 className="text-black font-black text-3xl">
@@ -150,25 +154,27 @@ const ConveyorInfo = () => {
         <ambientLight />
         <directionalLight position={[5, 5, 5]} intensity={10} />
 
-        {hasM1 && (
-          <Html position={[10, 2, 3]} center>
-            <div className="bg-red-500 flex text-center text-white rounded-lg shadow-xl p-2 font-bold text-sm max-w-[400px] text-ellipsis">
-              M1 ERRORE
-            </div>
+        {hasM11 && (
+          <Html position={[2, 5, 0]} center>
+           <div className="bg-red-500 flex text-center text-white rounded-lg shadow-xl p-2  font-bold text-sm max-w-[400px] text-ellipsis">
+              M11 ERRORE
+            </div>  
           </Html>
         )}
 
-        {hasM2 && (
-          <Html position={[-2, 0.6, -1]} center>
-            <div className="bg-red-500 flex text-center text-white rounded-lg shadow-xl p-2 font-bold text-sm max-w-[400px] text-ellipsis">
-              M2 ERRORE
-            </div>
+        {hasM10 && (
+          <Html position={[6, 6, 0]} center>
+           <div className="bg-red-500 flex text-center text-white rounded-lg shadow-xl p-2  font-bold text-sm max-w-[400px] text-ellipsis">
+              M10 ERRORE
+            </div> 
           </Html>
         )}
 
-        <primitive object={scene} />
+        <group>
+          <primitive object={scene} />
+        </group>
+
         <Pavimento />
-
         <OrbitControls
           ref={controlsRef}
           enableRotate={false}
@@ -183,4 +189,4 @@ const ConveyorInfo = () => {
   );
 };
 
-export default ConveyorInfo;
+export default Conveyor7Info;

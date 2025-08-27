@@ -27,15 +27,15 @@ const Macchinario = (sensorData: any) => {
 
     return(
         <group>
-            <Conveyor hasError={hasError("conveyor")}/>
-            <Conveyor2 hasError={hasError("conveyor2")}/>
-            <Conveyor3 hasError={hasError("conveyor3")}/>
-            <Conveyor4 hasError={hasError("conveyor4")}/>
-            <Conveyor5 hasError={hasError("conveyor5")}/>
-            <Conveyor6 hasError={hasError("conveyor6")}/>
-            <Conveyor7  hasError={hasError("conveyor7")}/>
-            <BagOpener hasError={hasError("aprisacchi")}/>
-            <Vaglio hasError={hasError("vaglio")}/>
+            <Conveyor hasError={hasError("M1") || hasError("M2")}/>
+            <Conveyor2 hasError={hasError("M3")}/>
+            <Conveyor3 hasError={hasError("M4")}/>
+            <Conveyor4 hasError={hasError("M12")}/>
+            <Conveyor5 hasError={hasError("M13") || hasError("M14")}/>
+            <Conveyor6 hasError={hasError("M6")}/>
+            <Conveyor7  hasError={hasError("M10") || hasError("M11")}/>
+            <BagOpener hasError={hasError("lacerasacchi")}/>
+            <Vaglio hasError={hasError("M6") || hasError("M7") || hasError("M8")}/>
             <Tramoggia1 hasError={false}/>
             <Tramoggia2 hasError={false}/>
         </group>

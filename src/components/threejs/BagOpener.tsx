@@ -12,28 +12,23 @@ const BagOpener = ({ hasError }: ErrorProps) => {
   const navigate = useNavigate();
   const glowRef = useRef<THREE.Mesh>(null);
 
-  // posa del modello
   scene.scale.set(50, 50, 50);
   scene.position.set(20, 0, -5);
   scene.rotation.set((-90 * Math.PI) / 180, 0, Math.PI / 2);
 
-  // centro del bbox (per posizionare l'Html)
   const center = useMemo(() => {
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
     const c = new THREE.Vector3();
     box.getCenter(c);
-    // alza un po' l'etichetta sopra al modello
     c.y += (box.getSize(new THREE.Vector3()).y || 1) * 0.6;
     return c;
   }, [scene]);
 
-  // Emissive + contorni su tutte le mesh, on/off a seconda di hasError
   useEffect(() => {
     scene.traverse((o: any) => {
       if (!o.isMesh) return;
 
-      // materiali standard + parametri "leggibili"
       if (!o.material?.isMeshStandardMaterial) {
         o.material = new THREE.MeshStandardMaterial({
           color: o.material?.color ?? new THREE.Color("#a0d6a0"),
@@ -50,7 +45,6 @@ const BagOpener = ({ hasError }: ErrorProps) => {
         mat.emissiveIntensity = 0;
       }
 
-      // contorni (Edges)
       if (hasError && !o.userData[EDGES_KEY]) {
         const eg = new THREE.EdgesGeometry(o.geometry, 18);
         const lm = new THREE.LineBasicMaterial({
@@ -76,7 +70,6 @@ const BagOpener = ({ hasError }: ErrorProps) => {
     });
   }, [scene, hasError]);
 
-  // Pulse del pannello rosso
   useFrame(() => {
     if (!hasError || !glowRef.current) return;
     const m = glowRef.current.material as THREE.MeshBasicMaterial;
@@ -88,7 +81,6 @@ const BagOpener = ({ hasError }: ErrorProps) => {
     <>
       <primitive object={scene} onClick={() => navigate("/bagopener")} />
 
-      {/* etichetta sopra il macchinario (compare solo se errore) */}
       {hasError && (
         <Html position={[center.x, center.y, center.z]} center distanceFactor={30} occlude>
           <div
@@ -103,12 +95,11 @@ const BagOpener = ({ hasError }: ErrorProps) => {
               border: "1px solid rgba(255,255,255,0.2)",
             }}
           >
-            Aprisacchi ERRORE
+            LACERASACCHI ERRORE
           </div>
         </Html>
       )}
 
-      {/* pannello rosso a terra (glow) quando errore */}
       {hasError && (
         <group>
           <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[11.5, 0, -5]}>

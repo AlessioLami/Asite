@@ -12,12 +12,10 @@ const Conveyor3 = ({ hasError }: ErrorProps) => {
   const glowRef = useRef<THREE.Mesh>(null);
   const navigate = useNavigate();
 
-  // posa del modello (come nel tuo codice)
   scene.scale.set(50, 50, 50);
   scene.position.set(3, 0, -6);
   scene.rotation.set((-90 * Math.PI) / 180, 0, (-90 * Math.PI) / 180);
 
-  // centro bbox per la label
   const center = useMemo(() => {
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
@@ -27,7 +25,6 @@ const Conveyor3 = ({ hasError }: ErrorProps) => {
     return c;
   }, [scene]);
 
-  // emissive + contorni on/off
   useEffect(() => {
     scene.traverse((o: any) => {
       if (!o.isMesh) return;
@@ -74,7 +71,6 @@ const Conveyor3 = ({ hasError }: ErrorProps) => {
     });
   }, [scene, hasError]);
 
-  // pulse del pannello rosso
   useFrame(() => {
     if (!hasError || !glowRef.current) return;
     const m = glowRef.current.material as THREE.MeshBasicMaterial;
@@ -88,7 +84,7 @@ const Conveyor3 = ({ hasError }: ErrorProps) => {
 
       {hasError && (
         <>
-          <Html position={[center.x, center.y, center.z]} center distanceFactor={30} occlude>
+          <Html position={[center.x, center.y, center.z+2]} center distanceFactor={30} occlude>
             <div
               style={{
                 padding: "6px 10px",
@@ -101,7 +97,7 @@ const Conveyor3 = ({ hasError }: ErrorProps) => {
                 border: "1px solid rgba(255,255,255,0.2)",
               }}
             >
-              Rullo 3 ERRORE
+              RULLO3 ERRORE
             </div>
           </Html>
 

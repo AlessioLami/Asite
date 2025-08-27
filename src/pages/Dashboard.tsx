@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 import type { RootState } from "../store.ts";
 import { useGetLastQuery } from "../services/apis/logsApi.ts";
@@ -9,7 +9,7 @@ import { VscSettings} from "react-icons/vsc"
 import {BsCpuFill} from "react-icons/bs"
 import { FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../services/slices/authSlice.ts";
+import { logout, setCredentials } from "../services/slices/authSlice.ts";
 
 const calcElapsedTime = (data : string) => {
     const delta = Date.now() - new Date(data).getTime();
@@ -25,6 +25,13 @@ const calcElapsedTime = (data : string) => {
     s % 60 || (!d && !h && !m) ? `${s % 60}s` : ''
   ].filter(Boolean) 
   return `${parts.join(' ')}`;
+}
+
+const handleLogout = () => {
+    const dispatch = useDispatch()
+    dispatch(setCredentials({user: null, role: null}))
+    dispatch(logout())
+
 }
 
 
@@ -45,12 +52,13 @@ const Dashboard = () => {
 
 
 
-        const { data, isLoading} = useGetLastQuery({daysBefore: 60}, {pollingInterval: 3000})
+        const { data, isLoading} = useGetLastQuery({daysBefore: 30}, {pollingInterval: 3000})
         if(!isLoading){
+            console.log(data.data)
         const ultimo = data.data.reduce((a: any,b: any) => DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b)
         const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione).toLocal().plus({hours: 2});
         elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "")
-        onlineSensorCount = data.data.filter((item: any) => !item.dispo_codifica.startsWith("ASI-VIRTUAL")).length
+        onlineSensorCount = data.data.length
         errorCount = data.data.filter((item: any) => item.isInTempAlarm === true).length
 
 
@@ -60,7 +68,7 @@ const Dashboard = () => {
 
             const error = {
                 codifica: item.dispo_codifica,
-                description: `Temperatura oltre la soglia di ${(item.temp_calc - item.tempLimit).toFixed(1)}°C`,
+                description: `Temperatura oltre la soglia di ${(item.temp_calc - item.tempLimit)?.toFixed(1)}°C`,
                 limite: item.tempLimit,
                 time: ts.toFormat("HH:mm:ss"),
                 date: ts.toFormat("dd/MM/yyyy")
@@ -84,8 +92,6 @@ const Dashboard = () => {
 
     return (
             <div className="relative w-full overflow-y-hidden h-screen bg-gray-800">
-                {//<Overlay email={user} role={role} errorCount={errorCount} onlineSensorCount={onlineSensorCount} elapsedTime={elapsedTime} errors={errorList}
-            }
 
                <div className="h-full">
                     <div className="flex justify-between px-5 py-3">
@@ -117,14 +123,15 @@ const Dashboard = () => {
                             <button onClick={() => navigate("/settings")}className="flex items-center hover:cursor-pointer hover:bg-gray-900/69 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3"><VscSettings className="mr-2"/>Impostazioni</button>
                         </div> 
 
-                        <button onClick={() => logout()}className="flex items-center text-xl font-bold hover:cursor-pointer hover:bg-blue-600/10 text-blue-500 bg-blue-600/20 w-full rounded-xl p-3"><FiLogOut className="mr-2"/>Logout</button>
+                        <button onClick={() => logout()}className="flex items-center text-xl font-bold hover:cursor-pointer hover:bg-blue-600/10 text-blue-500 bg-blue-600/20 w-full rounded-xl p-3"><FiLogOut className="mr-2" onClick={() => handleLogout()}/>Logout</button>
                     </div>
                     {!isLoading && <InteractivePanel sensorData={data.data}/>}
-                    <div className="h-screen w-[500px] px-3">
+                    <div className="h-screen w-[500px] px-3 flex flex-col justify-between">
+                       <div>
                         <h1 className="text-white text-xl font-semibold mb-5">Errori del Sistema ({erroriAttendibili.length})</h1>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-3 overflow-y-scroll max-h-[50%] scrollbar-custom">
                             {erroriAttendibili.length > 0 ? erroriAttendibili.map((error: any) => (
-                                <div className="flex flex-col items-start bg-red-500/10 border-red-500/30 border-[0.1px] p-3 rounded-xl">
+                                <div key={error.id} className="flex flex-col items-start bg-red-500/10 border-red-500/30 border-[0.1px] p-3 rounded-xl">
                                     <div className="flex justify-between w-full items-center"><h1 className="font-semibold flex items-center align-middle text-white text-lg"><FaCircle className="text-red-500 mr-2 h-2"/>{error.codifica}</h1><h1 className="text-gray-300 text-sm font-semibold">{error.time}</h1></div>
                                     <h1 className="text-white font-semibold">{error.description}</h1>
                                     <div className="flex justify-between w-full"><p className="text-gray-300 font-semibold text-sm">Limite temperatura: {error.limite}°C</p><p className="text-gray-300 text-sm font-semibold">{error.date}</p></div>
@@ -132,23 +139,20 @@ const Dashboard = () => {
                             )) : ""}
                         </div>
                         <h1 className="text-white text-xl font-semibold mb-5">Errori non attendibili ({erroriNonAttendibili.length})</h1>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-3 overflow-y-scroll max-h-[70%] scrollbar-custom">
                             {erroriNonAttendibili.length > 0 ? erroriNonAttendibili.map((error: any) => (
-                                  <div className="flex flex-col items-start bg-orange-500/10 border-orange-500/30 border-[0.1px] p-3 rounded-xl">
+                                  <div key={error.id} className="flex flex-col items-start bg-orange-500/10 border-orange-500/30 border-[0.1px] p-3 rounded-xl">
                                     <div className="flex justify-between w-full items-center"><h1 className="font-semibold flex items-center align-middle text-white text-lg"><FaCircle className="text-orange-500 mr-2 h-2"/>{error.codifica}</h1><h1 className="text-gray-300 text-sm font-semibold">{error.time}</h1></div>
                                     <h1 className="text-white font-semibold">{error.description}</h1>
                                     <div className="flex justify-between w-full"><p className="text-gray-300 font-semibold text-sm">Limite temperatura: {error.limite}°C</p><p className="text-gray-300 text-sm font-semibold">{error.date}</p></div>
                                 </div>  
                             )) : <h1>Non ci sono errori non attendibili nel sistema!</h1>}
                         </div>
-
+                        </div> 
+                        <img src="IOTALAB_Logo_RGB.png" className="p-2 pb-25"></img>
                     </div>
-
-
                 </div>
             </div>
-
-            
         </div>
 
     )

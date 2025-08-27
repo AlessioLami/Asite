@@ -12,11 +12,10 @@ import {
 import Pavimento from "./Pavimento";
 import Macchinario from "./Macchinario";
 
-/** Fit del gruppo e "push-in" della camera (funziona con Perspective). */
 function FitAndPushOnce({
   rootRef,
   controlsRef,
-  pushFactor = 1.3 // >1 = più vicino
+  pushFactor = 1 
 }: {
   rootRef: React.RefObject<THREE.Group>;
   controlsRef: React.RefObject<any>;
@@ -32,14 +31,11 @@ function FitAndPushOnce({
     if (progress < 100) return;
     if (!rootRef.current) return;
 
-    // aspetta 2 frame che tutto si assesti
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        // 1) Fit sul gruppo (NO .to(...) per evitare dipendenza dai Controls)
         bounds.refresh(rootRef.current).clip();
         bounds.fit();
 
-        // 2) Centro del gruppo -> target dei Controls (se presenti)
         const center = new THREE.Vector3();
         new THREE.Box3().setFromObject(rootRef.current!).getCenter(center);
 
@@ -47,11 +43,9 @@ function FitAndPushOnce({
           controlsRef.current.target.copy(center);
           controlsRef.current.update();
         } else {
-          // fallback: guarda il centro anche senza controls
           camera.lookAt(center);
         }
 
-        // 3) PUSH-IN: avvicina la PerspectiveCamera verso il target
         const persp = camera as THREE.PerspectiveCamera;
         if ((persp as any).isPerspectiveCamera) {
           const dir = new THREE.Vector3().subVectors(persp.position, center);
@@ -95,16 +89,14 @@ const InteractivePanel = ( sensorData:any) => {
       >
         <color attach="background" args={["#36454F"]} />
 
-        {/* === Camera PROSPETTICA === */}
         <PerspectiveCamera
           makeDefault
           position={[-40, 30, 36]}
-          fov={35}        // più piccolo = più tele, più profondità
+          fov={35}
           near={0.1}
           far={5000}
         />
 
-        {/* Luci */}
         <hemisphereLight args={[0xffffff, 0x444444, 0.6]} position={[0, 50, 0]} />
         <directionalLight
           position={[12, 18, 10]}
@@ -121,18 +113,16 @@ const InteractivePanel = ( sensorData:any) => {
 
         <Environment preset="warehouse" />
 
-        {/* Margine del fit qui (non esiste .margin() a runtime) */}
         <Bounds clip margin={0.85}>
           <group ref={plantRef}>
             <Pavimento />
             <Macchinario sensorData={sensorData} />
           </group>
 
-          {/* Fit + push-in una volta sola */}
           <FitAndPushOnce
             rootRef={plantRef}
             controlsRef={controlsRef}
-            pushFactor={1} // ↑ aumenta per più vicino
+            pushFactor={1}
           />
         </Bounds>
 
@@ -143,7 +133,7 @@ const InteractivePanel = ( sensorData:any) => {
           enablePan
           enableZoom
           enableDamping
-          dampingFactor={0.08}
+          dampingFactor={0.1}
           autoRotate={false}
           mouseButtons={{ LEFT: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE }}
         />

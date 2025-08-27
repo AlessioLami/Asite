@@ -25,7 +25,6 @@ const Conveyor2 = ({ hasError }: ErrorProps) => {
     return c;
   }, [scene]);
 
-  // emissive + contorni on/off
   useEffect(() => {
     scene.traverse((o: any) => {
       if (!o.isMesh) return;
@@ -72,7 +71,6 @@ const Conveyor2 = ({ hasError }: ErrorProps) => {
     });
   }, [scene, hasError]);
 
-  // pulse del pannello rosso
   useFrame(() => {
     if (!hasError || !glowRef.current) return;
     const m = glowRef.current.material as THREE.MeshBasicMaterial;
@@ -99,7 +97,7 @@ const Conveyor2 = ({ hasError }: ErrorProps) => {
                 border: "1px solid rgba(255,255,255,0.2)",
               }}
             >
-              Rullo 2 ERRORE
+              RULLO2 ERRORE
             </div>
           </Html>
 

@@ -12,6 +12,16 @@ type DateRange = {
   to: Date;
 };
 
+function safeFixedNumber(v: unknown, digits = 0): number | null {
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? Number(n.toFixed(digits)) : null;
+}
+
+function safeToFixedStr(v: unknown, digits = 0, fallback = "-"): string {
+  const n = safeFixedNumber(v, digits);
+  return n === null ? fallback : String(n);
+}
+
 const Dispositivi = () => {
   const [filtroNome, setFiltroNome] = useState("");
   const [filtroTipo, setFiltroTipo] = useState<"tutti" | "installato" | "non_installato" | "virtual">("tutti");
@@ -63,15 +73,14 @@ const Dispositivi = () => {
     log.codifica === dispositivoSelezionatoTemperature
   ).map((log: any) => ({
     name: DateTime.fromISO(log.ts_registrazione).toFormat("HH:mm"),
-    temperature: Number(log.temp_calc.toFixed(0)),
-    battery: Number(log.batt_level.toFixed(0)),
+    temperature: safeFixedNumber(log?.temp_calc, 0),
+    battery: safeFixedNumber(log?.batt_level ?? log?.batt_leve, 0),
   }));
 
   return (
     <div className="flex p-10 gap-10">
       <Toaster position="top-center" richColors />
 
-      {/* SIDEBAR */}
       <div className="flex flex-col gap-2 w-full max-w-[300px]">
         <div className="flex flex-col gap-3">
           <a
@@ -131,9 +140,7 @@ const Dispositivi = () => {
           </select>
         </div>
 
-        {/* GRAFICI */}
         <div className="mt-4 flex flex-col gap-6">
-          {/* GRAFICO TEMPERATURA */}
           <div className="h-64">
             <h1 className="font-bold text-xl mb-2">Grafico Temperature</h1>
             <ResponsiveContainer width="100%" height="100%">
@@ -150,7 +157,6 @@ const Dispositivi = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* GRAFICO BATTERIA */}
           <div className="h-64">
             <h1 className="font-bold text-xl mb-2">Grafico Batteria</h1>
             <ResponsiveContainer width="100%" height="100%">
@@ -169,7 +175,6 @@ const Dispositivi = () => {
         </div>
       </div>
 
-      {/* TABELLA */}
       <div className="w-full">
         <table className="w-full border-3 rounded-xl text-left">
           <thead className="bg-gray-100">
@@ -204,10 +209,10 @@ const Dispositivi = () => {
                     <td className="py-2 px-4 text-center">
                       {unita?.data.find((u: any) => u._id === log.unita_misurata)?.codifica.toUpperCase() || "N/A"}
                     </td>
-                    <td className="py-2 px-4 text-center">{log.temp_calc.toFixed(0)}°C</td>
+                    <td className="py-2 px-4 text-center">{safeToFixedStr(log?.temp_calc, 0)}°C</td>
                     <td className="py-2 px-4 text-center">{log.rssi} dBm</td>
                     <td className="py-2 px-4 text-center">{log.tempLimit ? "Si" : "No"}</td>
-                    <td className="py-2 px-4 text-center">{log.batt_level.toFixed(0)}</td>
+                    <td className="py-2 px-4 text-center">{safeToFixedStr(log?.batt_leve ?? log?.batt_level, 0)}</td>
                     <td className="py-2 px-4 text-center">{formattedDate}</td>
                   </tr>
                 );
@@ -227,3 +232,4 @@ const Dispositivi = () => {
 };
 
 export default Dispositivi;
+

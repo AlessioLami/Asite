@@ -12,12 +12,10 @@ const Vaglio = ({ hasError }: ErrorProps) => {
   const glowRef = useRef<THREE.Mesh>(null);
   const navigate = useNavigate();
 
-  // posa modello
   scene.scale.set(50, 50, 50);
   scene.position.set(3, 0, -5.5);
   scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (90 * Math.PI) / 180);
 
-  // centro bbox per la label
   const center = useMemo(() => {
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
@@ -27,7 +25,6 @@ const Vaglio = ({ hasError }: ErrorProps) => {
     return c;
   }, [scene]);
 
-  // emissive + contorni
   useEffect(() => {
     scene.traverse((o: any) => {
       if (!o.isMesh) return;
@@ -74,7 +71,6 @@ const Vaglio = ({ hasError }: ErrorProps) => {
     });
   }, [scene, hasError]);
 
-  // pulsazione glow
   useFrame(() => {
     if (!hasError || !glowRef.current) return;
     const m = glowRef.current.material as THREE.MeshBasicMaterial;
@@ -101,7 +97,7 @@ const Vaglio = ({ hasError }: ErrorProps) => {
                 border: "1px solid rgba(255,255,255,0.2)",
               }}
             >
-              Vaglio ERRORE
+              VAGLIO ERRORE
             </div>
           </Html>
 

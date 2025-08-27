@@ -12,12 +12,10 @@ const Conveyor = ({ hasError }: ErrorProps) => {
   const glowRef = useRef<THREE.Mesh>(null);
   const navigate = useNavigate();
 
-  // posa del modello (come nel tuo codice)
   scene.scale.set(50, 50, 50);
   scene.position.set(3, 0, -5.5);
   scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (90 * Math.PI) / 180);
 
-  // centro del bbox per la label
   const center = useMemo(() => {
     scene.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(scene);
@@ -27,7 +25,6 @@ const Conveyor = ({ hasError }: ErrorProps) => {
     return c;
   }, [scene]);
 
-  // evidenziazione: emissive + edges on/off
   useEffect(() => {
     scene.traverse((o: any) => {
       if (!o.isMesh) return;
@@ -74,7 +71,6 @@ const Conveyor = ({ hasError }: ErrorProps) => {
     });
   }, [scene, hasError]);
 
-  // pulse del pannello rosso
   useFrame(() => {
     if (!hasError || !glowRef.current) return;
     const m = glowRef.current.material as THREE.MeshBasicMaterial;
@@ -101,12 +97,11 @@ const Conveyor = ({ hasError }: ErrorProps) => {
                 border: "1px solid rgba(255,255,255,0.2)",
               }}
             >
-              Rullo 1 ERRORE
+              RULLO1 ERRORE
             </div>
           </Html>
 
           <group>
-            {/* glow a terra (coordinate tue) */}
             <mesh
               ref={glowRef}
               rotation={[(90 * Math.PI) / 180, 0, (90 * Math.PI) / 180]}
