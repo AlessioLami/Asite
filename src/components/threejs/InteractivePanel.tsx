@@ -66,7 +66,7 @@ const InteractivePanel = ( sensorData:any) => {
   const plantRef = useRef<THREE.Group>(null!);
 
   return (
-    <div className="relative z-1 w-full max-w-[1000px] max-h-[calc(100vh-80px)]">
+    <div className="relative rounded-xl z-1 w-full max-w-[1000px] h-screen max-h-[calc(100vh-80px)]">
       {progress < 100 && (
         <div className="absolute w-full h-full flex bg-gray-400 justify-center items-center font-black text-5xl text-white">
           Caricando i modelli... {Math.round(progress)}%
@@ -92,7 +92,7 @@ const InteractivePanel = ( sensorData:any) => {
         <PerspectiveCamera
           makeDefault
           position={[-40, 30, 36]}
-          fov={35}
+          fov={36}
           near={0.1}
           far={5000}
         />

@@ -177,18 +177,18 @@ const Dashboard = () => {
 
   const statusStyles = {
     error: {
-      wrap: "text-red-500 bg-red-500/20",
-      dot: "text-red-500",
+      wrap: "text-red-300 bg-red-500/15 ring-1 ring-inset ring-red-500/30 shadow-[0_0_18px] shadow-red-500/30",
+      dot: "text-red-300",
       label: "KO",
     },
     warn: {
-      wrap: "text-yellow-400 bg-yellow-400/20",
-      dot: "text-yellow-400",
+      wrap: "text-yellow-300 bg-yellow-400/10 ring-1 ring-inset ring-yellow-400/30 shadow-[0_0_18px] shadow-yellow-400/25",
+      dot: "text-yellow-300",
       label: "KO",
     },
     ok: {
-      wrap: "text-green-500 bg-green-500/20",
-      dot: "text-green-500",
+      wrap: "text-emerald-300 bg-emerald-500/10 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_18px] shadow-emerald-500/25",
+      dot: "text-emerald-300",
       label: "OK",
     },
   } as const;
@@ -252,35 +252,70 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="relative w-full h-screen bg-gray-800 overflow-hidden">
+    <div className="relative w-full h-screen overflow-hidden">
+      {/* SFONDO: griglia + bagliori radiali in layer assoluto */}
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        {/* base gradient scuro */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0b1220] via-[#0f1a2d] to-[#0b1220]" />
+        {/* bagliori radiali colorati */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 10%, rgba(59,130,246,0.12), transparent 35%), radial-gradient(circle at 80% 5%, rgba(16,185,129,0.10), transparent 30%), radial-gradient(circle at 60% 80%, rgba(234,179,8,0.08), transparent 35%)",
+          }}
+        />
+        {/* GRIGLIA sottile */}
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+            // fade top/bottom per non disturbare header e footer
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)",
+            maskImage:
+              "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)",
+          }}
+        />
+      </div>
+
       <div className="h-full flex flex-col">
         {/* Top bar */}
         <div className="flex justify-between px-5 py-3">
           <div className="flex gap-5 items-center leading-none">
             <img src="IOTALAB_Logo_RGB.png" className="p-2 h-[80px]" />
             <h1 className="text-white text-2xl font-bold">Selezione Rifiuti Urbani</h1>
-            {/* Badge STATO (verde/giallo/rosso) */}
+
+            {/* Badge STATO (verde/giallo/rosso) con GLOW */}
             <h1
               className={`h-[30px] ${statusStyles[systemStatus].wrap} rounded-full px-2 text-lg flex font-semibold items-center truncate`}
             >
               <FaCircle className={`h-4 w-4 mr-1 ${statusStyles[systemStatus].dot}`} />
               Stato:<span className="ml-1">{statusStyles[systemStatus].label}</span>
             </h1>
-            {/* Badge STATO COMUNICAZIONE (verde se ok, rosso se warning) */}
+
+            {/* Badge STATO COMUNICAZIONE (opzionale) */}
             <h1
-              className={`h-[30px] ${hasWarnings ? "bg-red-500/20 text-red-500" : "bg-green-500/20 text-green-500"} rounded-full px-2 text-lg flex font-semibold items-center truncate`}
+              className={`h-[30px] ${
+                hasWarnings
+                  ? "bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-500/30 shadow-[0_0_18px] shadow-red-500/20"
+                  : "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_18px] shadow-emerald-500/20"
+              } rounded-full px-2 text-lg flex font-semibold items-center truncate`}
             >
-              <FaWifi className={`h-4 w-4 mr-1 ${hasWarnings ? "text-red-500" : "text-green-500"}`} />
+              <FaWifi className={`h-4 w-4 mr-1 ${hasWarnings ? "text-red-300" : "text-emerald-300"}`} />
               Stato Comunicazione:<span className="ml-1">{hasWarnings ? "KO" : "OK"}</span>
             </h1>
           </div>
+
           <div className="flex gap-2 items-center">
-            <h1 className="rounded-full p-3 bg-blue-500/69 w-8 h-8 text-white font-semibold flex items-center justify-center">
+            <h1 className="rounded-full p-3 bg-blue-500/30 w-8 h-8 text-white font-semibold flex items-center justify-center border border-blue-400/30">
               WI
             </h1>
             <div className="flex flex-col">
               <h1 className="text-white">{user}</h1>
-              <p className="text-gray-400">{role}</p>
+              <p className="text-gray-300">{role}</p>
             </div>
           </div>
         </div>
@@ -288,8 +323,8 @@ const Dashboard = () => {
         {/* Content area */}
         <div className="flex min-h-0 flex-1">
           {/* Left sidebar */}
-          <div className="w-[500px] px-3 flex flex-col justify-between">
-            <div className="bg-gray-900 rounded-xl p-3 flex flex-col gap-4">
+          <div className="w-[350px] px-3 flex flex-col justify-between">
+            <div className="bg-gray-900/80 rounded-xl p-3 flex flex-col gap-4 border border-white/10">
               <h1 className="text-white text-lg font-semibold">Stato del Sistema</h1>
               <h1 className="flex text-lg items-center text-white font-semibold">
                 <GoAlertFill className={`h-4 mr-2 ${statusStyles[systemStatus].dot}`} />
@@ -301,23 +336,27 @@ const Dashboard = () => {
                 </span>
               </h1>
               <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaBug className="h-4 mr-2 text-yellow-500" />
+                <FaBug className="h-4 mr-2 text-yellow-300" />
                 Errori
                 <span
-                  className={`ml-auto ${errorCount > 0 ? "bg-yellow-500/20 text-yellow-500" : "bg-green-500/20 text-green-500"} px-2 rounded-md font-semibold`}
+                  className={`ml-auto ${
+                    errorCount > 0
+                      ? "bg-yellow-400/10 text-yellow-300 ring-1 ring-yellow-400/30"
+                      : "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30"
+                  } px-2 rounded-md font-semibold`}
                 >
                   {errorCount}
                 </span>
               </h1>
               <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaWifi className="h-4 mr-2 text-emerald-500" />
+                <FaWifi className="h-4 mr-2 text-emerald-300" />
                 Dispositivi
-                <span className="ml-auto bg-green-500/20 text-green-500 px-2 rounded-md font-semibold">
+                <span className="ml-auto bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30 px-2 rounded-md font-semibold">
                   {onlineSensorCount}
                 </span>
               </h1>
               <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaClock className="h-4 mr-2 text-blue-500" />
+                <FaClock className="h-4 mr-2 text-blue-300" />
                 Ultimo update
                 <span className="ml-auto px-2 rounded-md font-semibold text-sm">{elapsedTime}</span>
               </h1>
@@ -326,21 +365,21 @@ const Dashboard = () => {
             <div className="flex flex-col gap-3 mt-6">
               <button
                 onClick={() => navigate("/dispositivi")}
-                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3 transition"
+                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900/80 border border-white/10 w-full rounded-xl p-3 transition"
               >
                 <BsCpuFill className="mr-2" />
                 Log Dispositivi
               </button>
               <button
                 onClick={() => navigate("/sniffer")}
-                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3 transition"
+                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900/80 border border-white/10 w-full rounded-xl p-3 transition"
               >
                 <FaWifi className="mr-2" />
                 Sniffer
               </button>
               <button
                 onClick={() => navigate("/settings")}
-                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3 transition"
+                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900/80 border border-white/10 w-full rounded-xl p-3 transition"
               >
                 <VscSettings className="mr-2" />
                 Impostazioni
@@ -349,7 +388,7 @@ const Dashboard = () => {
 
             <button
               onClick={handleLogout}
-              className="mt-4 flex items-center text-xl font-bold hover:bg-blue-600/10 text-blue-500 bg-blue-600/20 w-full rounded-xl p-3 transition"
+              className="mt-4 flex items-center text-xl font-bold hover:bg-blue-600/10 text-blue-300 bg-blue-500/10 border border-blue-400/30 w-full rounded-xl p-3 transition"
             >
               <FiLogOut className="mr-2" />
               Logout
@@ -357,10 +396,12 @@ const Dashboard = () => {
           </div>
 
           {/* Center panel */}
-          {!isLoading && <InteractivePanel sensorData={data?.data ?? []} />}
+          <div className="h-screen flex-1 min-w-0">
+            {!isLoading && <InteractivePanel sensorData={data?.data ?? []} />}
+          </div>
 
           {/* Right sidebar: scroll unico */}
-          <div className="h-screen w-[520px] px-3 flex flex-col">
+          <div className="h-screen w-[350px] px-3 flex flex-col">
             <div className="flex flex-col gap-4 flex-1 overflow-y-auto scrollbar-elegant">
               <Section title="Errori del Sistema" count={erroriAttendibili.length}>
                 {erroriAttendibili.length > 0 ? (
@@ -370,7 +411,7 @@ const Dashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">Nessun errore attendibile.</p>
+                  <p className="text-gray-300 text-sm">Nessun errore attendibile.</p>
                 )}
               </Section>
 
@@ -382,7 +423,7 @@ const Dashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">Nessun errore non attendibile nel sistema.</p>
+                  <p className="text-gray-300 text-sm">Nessun errore non attendibile nel sistema.</p>
                 )}
               </Section>
 
@@ -394,7 +435,7 @@ const Dashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">Nessun warning al momento.</p>
+                  <p className="text-gray-300 text-sm">Nessun warning al momento.</p>
                 )}
               </Section>
             </div>

@@ -1,5 +1,12 @@
 import * as THREE from "three";
-import { Html, OrbitControls, OrthographicCamera, useGLTF } from "@react-three/drei";
+import {
+  Html,
+  OrbitControls,
+  OrthographicCamera,
+  useGLTF,
+  Environment,
+  ContactShadows,
+} from "@react-three/drei";
 import Pavimento from "../components/threejs/Pavimento";
 import { Canvas } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
@@ -56,13 +63,13 @@ const Conveyor4Info = () => {
 
   // Solo M12/M13/M14
   const conveyorRows = useMemo(
-    () => rows.filter(r => ["M12", "M13", "M14"].includes(r?.unita_misurata ?? "")),
+    () => rows.filter((r) => ["M12", "M13", "M14"].includes(r?.unita_misurata ?? "")),
     [rows]
   );
 
   // Solo errori temperatura
   const errorsData = useMemo(
-    () => conveyorRows.filter(r => r?.isInTempAlarm === true),
+    () => conveyorRows.filter((r) => r?.isInTempAlarm === true),
     [conveyorRows]
   );
 
@@ -93,28 +100,44 @@ const Conveyor4Info = () => {
       });
   }, [errorsData]);
 
-  const hasM12 = useMemo(() => errorsData.some(e => e?.unita_misurata === "M12"), [errorsData]);
+  const hasM12 = useMemo(
+    () => errorsData.some((e) => e?.unita_misurata === "M12"),
+    [errorsData]
+  );
 
   return (
-    <div className="h-screen w-full flex justify-center items-center">
-      <div className="absolute z-[100] pointer-events-none flex w-full h-full p-10">
-        <div>
+    <div
+      className="h-screen w-full relative overflow-hidden text-white"
+      style={{
+        backgroundColor: "#0f172a",
+        backgroundImage: `
+          radial-gradient(circle at 18% 8%, rgba(59,130,246,0.12), transparent 35%),
+          radial-gradient(circle at 82% 10%, rgba(16,185,129,0.10), transparent 30%),
+          radial-gradient(circle at 60% 80%, rgba(234,179,8,0.08), transparent 35%),
+          linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)
+        `,
+        backgroundSize: "auto,auto,auto,40px 40px,40px 40px",
+      }}
+    >
+      {/* Overlay UI */}
+      <div className="absolute inset-0 z-[100] pointer-events-none p-10 flex">
+        <div className="space-y-3">
           <h1
             onClick={() => navigate("/dashboard")}
-            className="pointer-events-auto flex text-black font-black align-middle truncate items-center gap-2 text-xl bg-white"
+            className="pointer-events-auto inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold
+                       bg-white/5 border border-white/10 backdrop-blur hover:bg-white/10 transition"
           >
             <FaArrowLeft /> TORNA ALLA PANORAMICA
           </h1>
-          <h1 className="text-black font-black text-5xl">RULLO 4</h1>
+          <h1 className="text-5xl font-extrabold tracking-tight">RULLO 4</h1>
 
           <div className="flex flex-col">
-            <h1 className="text-black font-black text-3xl">
-              ERRORI: {isLoading ? "…" : errors.length}
-            </h1>
+            <h1 className="text-2xl font-bold">ERRORI: {isLoading ? "…" : errors.length}</h1>
 
             <div className="flex flex-col gap-2 pt-2">
               {!isLoading && errors.length === 0 && (
-                <div className="bg-green-500 text-white font-semibold p-2 rounded-xl">
+                <div className="bg-emerald-500/15 ring-1 ring-emerald-500/30 text-emerald-200 font-semibold p-2 rounded-xl backdrop-blur">
                   Nessun errore in questo momento.
                 </div>
               )}
@@ -123,23 +146,24 @@ const Conveyor4Info = () => {
                 errors.map((error) => (
                   <div
                     key={`${error.id}-${error.ts}`}
-                    className="flex flex-col items-start bg-red-500 border-red-500/30 border-[0.1px] p-2 rounded-xl"
+                    className="flex flex-col items-start rounded-xl p-3
+                               bg-red-500/15 ring-1 ring-red-500/30 backdrop-blur"
                   >
                     <div className="flex justify-between w-full items-center">
-                      <h1 className="font-semibold flex items-center align-middle text-white text-lg">
-                        <FaCircle className="text-white mr-2 h-2" />
+                      <h1 className="font-semibold flex items-center text-white text-lg">
+                        <FaCircle className="text-red-400 mr-2 h-2 w-2" />
                         {error.codifica}
                       </h1>
-                      <h1 className="text-white text-sm font-semibold">{error.time}</h1>
+                      <h1 className="text-white/80 text-sm font-semibold">{error.time}</h1>
                     </div>
 
-                    <h1 className="text-white font-semibold">{error.description}</h1>
+                    <h1 className="text-white/90 font-semibold">{error.description}</h1>
 
                     <div className="flex justify-between w-full">
-                      <p className="text-white font-semibold text-sm">
+                      <p className="text-white/80 font-semibold text-sm">
                         Limite temperatura: {error.limite}°C
                       </p>
-                      <p className="text-gray-200 text-sm font-semibold">{error.date}</p>
+                      <p className="text-white/70 text-sm font-semibold">{error.date}</p>
                     </div>
                   </div>
                 ))}
@@ -148,30 +172,82 @@ const Conveyor4Info = () => {
         </div>
       </div>
 
-      <Canvas className="relative z-[1]">
+      {/* Viewer 3D */}
+      <Canvas
+        className="relative z-[1] w-full h-full !bg-transparent"
+        shadows
+        dpr={[1, 2]}
+        gl={{ antialias: true, alpha: true }}
+        onCreated={({ gl, scene: scn, camera }) => {
+          gl.outputColorSpace = THREE.SRGBColorSpace;
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.2; // più luminoso
+          gl.shadowMap.enabled = true;
+          gl.shadowMap.type = THREE.PCFSoftShadowMap;
+          scn.background = null; // Canvas trasparente -> si vede la griglia
+          camera.up.set(0, 1, 0);
+        }}
+      >
         <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} />
-        <ambientLight />
-        <directionalLight position={[5, 5, 5]} intensity={10} />
 
+        {/* Illuminazione “studio” */}
+        <ambientLight intensity={0.6} />
+        <hemisphereLight args={["#bcd3ff", "#1f2937", 0.6]} position={[0, 1, 0]} />
+        <directionalLight
+          position={[10, 15, 8]} // key
+          intensity={1.8}
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-camera-near={1}
+          shadow-camera-far={120}
+          shadow-bias={-0.0001}
+        />
+        <directionalLight position={[-12, 10, -6]} intensity={0.6} /> {/* fill */}
+        <directionalLight position={[0, 12, -20]} intensity={0.8} />   {/* rim/back */}
+
+        {/* HDRI morbida + ombre a contatto */}
+        <Environment preset="warehouse" />
+        <ContactShadows opacity={0.35} scale={90} blur={2.6} far={30} position={[0, -0.001, 0]} />
+
+        {/* Badge M12 in errore (glass + neon red) */}
         {hasM12 && (
           <Html position={[3, 11, 10]} center>
-           <div className="bg-red-500 flex text-center text-white rounded-lg shadow-xl p-2  font-bold text-sm max-w-[400px] text-ellipsis">
+            <div
+              style={{
+                padding: "6px 12px",
+                borderRadius: 999,
+                background:
+                  "linear-gradient(180deg, rgba(255,59,59,0.95), rgba(255,59,59,0.82))",
+                color: "white",
+                fontWeight: 800,
+                fontSize: 12,
+                letterSpacing: 0.3,
+                boxShadow:
+                  "0 10px 30px rgba(255,59,59,0.35), 0 0 0 2px rgba(255,59,59,0.35), inset 0 0 0 1px rgba(255,255,255,0.12)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                whiteSpace: "nowrap",
+              }}
+            >
               M12 ERRORE
-            </div> 
+            </div>
           </Html>
         )}
 
-
+        {/* Modello + clone */}
         <group>
-          <primitive object={scene} />
+          <primitive object={scene} castShadow receiveShadow />
         </group>
 
         <Pavimento />
+
         <OrbitControls
-          ref={controlsRef}
+          ref={controlsRef as any}
           enableRotate={false}
-          enablePan={true}
-          enableZoom={true}
+          enablePan
+          enableZoom
           minZoom={40}
           maxZoom={100}
           mouseButtons={{ LEFT: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE }}
@@ -182,3 +258,4 @@ const Conveyor4Info = () => {
 };
 
 export default Conveyor4Info;
+
