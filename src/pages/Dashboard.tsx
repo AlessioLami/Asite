@@ -79,7 +79,7 @@ const Dashboard = () => {
       return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
     }
 
-    
+    // ultimo timestamp
     const ultimo = data.data.reduce((a: any, b: any) =>
       DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b
     );
@@ -87,10 +87,10 @@ const Dashboard = () => {
     elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "");
     onlineSensorCount = data.data.length;
 
-    
+    // errori temperatura
     errorCount = data.data.filter((item: any) => item.isInTempAlarm === true).length;
 
-    
+    // warnings comunicazione (ritardo aggiornamento)
     const dispoWarning = data.data.map((item: any) => {
       const maxDispoUpdateTime =
         parameters?.find((param: any) => param.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
@@ -101,13 +101,12 @@ const Dashboard = () => {
         .as("milliseconds");
       return {
         id: item.mac_dispo,
-        ts: ts_registrazione,           
+        ts: ts_registrazione,
         warning: diffInMilliseconds > maxDispoUpdateTime,
         delta: diffInMilliseconds,
       };
     });
 
-    
     dispoWarning.forEach((item: any) => {
       if (!item.warning) return;
       const humanDelta = ((ms: number) => {
@@ -132,10 +131,10 @@ const Dashboard = () => {
       });
     });
 
-    
+    // ordina warnings per codifica
     warnings.sort((a, b) => a.codifica.localeCompare(b.codifica));
 
-    
+    // costruzione errori
     const errorRows: ErrorItem[] = [];
     data.data
       .filter((item: any) => item.isInTempAlarm === true)
@@ -150,7 +149,7 @@ const Dashboard = () => {
         });
       });
 
-    
+    // ordina errori (data/ora desc, poi codifica)
     errorRows.sort((a, b) => {
       const ad = DateTime.fromFormat(a.date, "dd/LL/yyyy").toMillis();
       const bd = DateTime.fromFormat(b.date, "dd/LL/yyyy").toMillis();
@@ -159,6 +158,7 @@ const Dashboard = () => {
       return a.codifica.localeCompare(b.codifica);
     });
 
+    // attendibilità: <= 8 minuti
     errorRows.forEach((e) => {
       const dt = DateTime.fromFormat(e.date + " " + e.time, "dd/LL/yyyy HH:mm:ss");
       const diffInMinutes = DateTime.now().setZone("Europe/Rome").diff(dt, "minutes").as("minutes");
@@ -169,7 +169,30 @@ const Dashboard = () => {
     return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
   }, [data, isLoading, parameters]);
 
-  
+  // === Stato complessivo (verde/giallo/rosso) ===
+  const hasErrors = errorCount > 0;
+  const hasWarnings = warnings.length > 0;
+
+  const systemStatus = hasErrors ? "error" : hasWarnings ? "warn" : "ok";
+
+  const statusStyles = {
+    error: {
+      wrap: "text-red-500 bg-red-500/20",
+      dot: "text-red-500",
+      label: "KO",
+    },
+    warn: {
+      wrap: "text-yellow-400 bg-yellow-400/20",
+      dot: "text-yellow-400",
+      label: "KO",
+    },
+    ok: {
+      wrap: "text-green-500 bg-green-500/20",
+      dot: "text-green-500",
+      label: "OK",
+    },
+  } as const;
+
   const Section = ({
     title,
     count,
@@ -236,11 +259,19 @@ const Dashboard = () => {
           <div className="flex gap-5 items-center leading-none">
             <img src="IOTALAB_Logo_RGB.png" className="p-2 h-[80px]" />
             <h1 className="text-white text-2xl font-bold">Selezione Rifiuti Urbani</h1>
+            {/* Badge STATO (verde/giallo/rosso) */}
             <h1
-              className={`text-${errorCount > 0 ? "red-500" : "green-500"} h-[30px] ${errorCount > 0 ? "bg-red-500/20" : "bg-green-500/20"} rounded-full px-2 text-lg flex font-semibold items-center truncate`}
+              className={`h-[30px] ${statusStyles[systemStatus].wrap} rounded-full px-2 text-lg flex font-semibold items-center truncate`}
             >
-              <FaCircle className="h-4 w-4 mr-1" color={errorCount > 0 ? "red" : "green"} />
-              Stato:<span className="ml-1">{errorCount > 0 ? "KO" : "OK"}</span>
+              <FaCircle className={`h-4 w-4 mr-1 ${statusStyles[systemStatus].dot}`} />
+              Stato:<span className="ml-1">{statusStyles[systemStatus].label}</span>
+            </h1>
+            {/* Badge STATO COMUNICAZIONE (verde se ok, rosso se warning) */}
+            <h1
+              className={`h-[30px] ${hasWarnings ? "bg-red-500/20 text-red-500" : "bg-green-500/20 text-green-500"} rounded-full px-2 text-lg flex font-semibold items-center truncate`}
+            >
+              <FaWifi className={`h-4 w-4 mr-1 ${hasWarnings ? "text-red-500" : "text-green-500"}`} />
+              Stato Comunicazione:<span className="ml-1">{hasWarnings ? "KO" : "OK"}</span>
             </h1>
           </div>
           <div className="flex gap-2 items-center">
@@ -261,16 +292,16 @@ const Dashboard = () => {
             <div className="bg-gray-900 rounded-xl p-3 flex flex-col gap-4">
               <h1 className="text-white text-lg font-semibold">Stato del Sistema</h1>
               <h1 className="flex text-lg items-center text-white font-semibold">
-                <GoAlertFill color="#EF4444" className="h-4 mr-2" />
+                <GoAlertFill className={`h-4 mr-2 ${statusStyles[systemStatus].dot}`} />
                 Stato
                 <span
-                  className={`ml-auto ${errorCount > 0 ? "bg-red-500/20 text-red-500" : "bg-green-500/20 text-green-500"} px-2 rounded-md font-semibold`}
+                  className={`ml-auto ${statusStyles[systemStatus].wrap} px-2 rounded-md font-semibold`}
                 >
-                  {errorCount > 0 ? "KO" : "OK"}
+                  {statusStyles[systemStatus].label}
                 </span>
               </h1>
               <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaBug color="#F59E0B" className="h-4 mr-2" />
+                <FaBug className="h-4 mr-2 text-yellow-500" />
                 Errori
                 <span
                   className={`ml-auto ${errorCount > 0 ? "bg-yellow-500/20 text-yellow-500" : "bg-green-500/20 text-green-500"} px-2 rounded-md font-semibold`}
@@ -279,14 +310,14 @@ const Dashboard = () => {
                 </span>
               </h1>
               <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaWifi color="#10B981" className="h-4 mr-2" />
+                <FaWifi className="h-4 mr-2 text-emerald-500" />
                 Dispositivi
                 <span className="ml-auto bg-green-500/20 text-green-500 px-2 rounded-md font-semibold">
                   {onlineSensorCount}
                 </span>
               </h1>
               <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaClock color="#3B82F6" className="h-4 mr-2" />
+                <FaClock className="h-4 mr-2 text-blue-500" />
                 Ultimo update
                 <span className="ml-auto px-2 rounded-md font-semibold text-sm">{elapsedTime}</span>
               </h1>
