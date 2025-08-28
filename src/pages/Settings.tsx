@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { FiArrowLeft, FiPlus } from "react-icons/fi"
 import { FaClipboardList, FaDatabase } from "react-icons/fa"
 import { FaWeightScale } from "react-icons/fa6"
@@ -78,11 +78,13 @@ const Settings = () => {
 
   let dispoList = dispoData?.data ?? []
   if(dispoError && "status" in dispoError){
+    // @ts-ignore
     dispoList = dispoError.status === 400 ? [] : dispoData.data ?? []
   }
   
   let unitaList = unitaData?.data ?? []
   if(unitaError && "status" in unitaError){
+    // @ts-ignore
     unitaList = unitaError.status === 400 ? [] : unitaData.data ?? []
   }
 
@@ -110,7 +112,9 @@ const Settings = () => {
     e.preventDefault()
     try{
       const res = await remove(id)
+      // @ts-ignore
       if(!res.data.success){
+        // @ts-ignore
         toast.error(res.data.message)
       }else{
         toast.success("Utente rimosso con successo!")
@@ -140,7 +144,9 @@ const Settings = () => {
     e.preventDefault()
     try{
       const res = await removeUnita(id)
+      // @ts-ignore
       if(!res.data.success){
+        // @ts-ignore
         toast.error(res.data.message)
       }else{
         toast.success("Unità rimossa con successo!")
@@ -155,7 +161,9 @@ const Settings = () => {
     e.preventDefault()
     try{
       const res = await removeDispo(id)
+      // @ts-ignore
       if(!res.data.success){
+        // @ts-ignore
         toast.error(res.data.message)
       }else{
         toast.success("Dispositivo rimosso con successo!")
@@ -209,31 +217,83 @@ const Settings = () => {
     }
   }
 
-  // --- PARAMETRI: submit senza stato, con prefill dalla GET
-  const handleUpdateMaxTime = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    try{
-      const form = new FormData(e.currentTarget)
-      const max = Number(form.get("maxUpdateTime"))
-      if (!max || Number.isNaN(max)) {
-        toast.error("Inserisci un numero valido.")
-        return
-      }
+  // ---------------- PARAMETRI: H/M/S state per maxDispoUpdateTime (ms)
+  const [maxH, setMaxH] = useState<number | ''>('');
+  const [maxM, setMaxM] = useState<number | ''>('');
+  const [maxS, setMaxS] = useState<number | ''>('');
 
-      const res = await updateParameters({ maxUpdateTime: max } as any)
-      // stesso controllo errori usato altrove
-      // @ts-ignore
-      if (res.error && "data" in res.error && (res.error.data as any)?.message) {
-        // @ts-ignore
-        toast.error((res.error.data as any).message)
-      } else {
-        toast.success("Parametri aggiornati con successo!")
-        await refetchParams()
-      }
-    }catch(error){
-      toast.error("Errore nell'aggiornamento dei parametri.")
+  // Popola H/M/S quando arrivano i parametri
+  useEffect(() => {
+    if (!paramsLoading && !paramsError && parameters) {
+      const ms: number = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0
+      const h = Math.floor(ms / 3600000)
+      const m = Math.floor((ms % 3600000) / 60000)
+      const s = Math.floor((ms % 60000) / 1000)
+      setMaxH(h)
+      setMaxM(m)
+      setMaxS(s)
     }
+  }, [paramsLoading, paramsError, parameters])
+
+  const pad2 = (n: number) => n.toString().padStart(2, "0")
+
+  const totalMs =
+    (Number(maxH || 0) * 3600000) +
+    (Number(maxM || 0) * 60000) +
+    (Number(maxS || 0) * 1000)
+
+  const hh = Math.floor(totalMs / 3600000)
+  const mm = Math.floor((totalMs % 3600000) / 60000)
+  const ss = Math.floor((totalMs % 60000) / 1000)
+
+ const handleUpdateMaxTime = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault()
+  try {
+    const h = Number(maxH || 0)
+    const m = Number(maxM || 0)
+    const s = Number(maxS || 0)
+
+    const isInt = (v: number) => Number.isInteger(v) && v >= 0
+    if (![h, m, s].every(isInt)) {
+      toast.error("Inserisci numeri interi validi (>= 0).")
+      return
+    }
+    if (m > 59 || s > 59) {
+      toast.error("Minuti e secondi devono essere tra 0 e 59.")
+      return
+    }
+
+    const ms = (h * 3600000) + (m * 60000) + (s * 1000)
+    if (ms <= 0) {
+      toast.error("Il tempo totale deve essere maggiore di 0.")
+      return
+    }
+
+    // recupera il parametro esistente
+    const param = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")
+    if (!param) {
+      toast.error("Parametro non trovato.")
+      return
+    }
+
+    const res = await updateParameters({
+      _id: param._id,
+      keySetting: param.keySetting,
+      numberValue: ms
+    } as any)
+
+    // @ts-ignore
+    if (res.error && "data" in res.error && (res.error.data as any)?.message) {
+      // @ts-ignore
+      toast.error((res.error.data as any).message)
+    } else {
+      toast.success("Parametri aggiornati con successo!")
+      await refetchParams()
+    }
+  } catch (error) {
+    toast.error("Errore nell'aggiornamento dei parametri.")
   }
+} 
 
   return(
     <div
@@ -495,19 +555,61 @@ const Settings = () => {
 
           {!paramsLoading && !paramsError && (
             <>
-              <form onSubmit={handleUpdateMaxTime} className="flex flex-col w-full gap-3 bg-white/5 border border-white/10 backdrop-blur rounded-xl p-4">
-                <h1 className="font-semibold text-xl">Tempo di aggiornamento dispositivo</h1>
+              <form onSubmit={handleUpdateMaxTime} className="flex flex-col w-full gap-4 bg-white/5 border border-white/10 backdrop-blur rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <h1 className="font-semibold text-xl">Tempo massimo di aggiornamento dispositivo</h1>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="flex flex-col">
+                    <label className="text-sm text-white/70 mb-1">Ore</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={maxH}
+                      onChange={(e) => setMaxH(e.target.value === "" ? "" : Math.max(0, parseInt(e.target.value || "0")))}
+                      placeholder="0"
+                      className="p-2 rounded-lg w-full bg-white/5 border border-white/10 placeholder-white/60 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm text-white/70 mb-1">Minuti</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      step={1}
+                      value={maxM}
+                      onChange={(e) => setMaxM(e.target.value === "" ? "" : Math.min(59, Math.max(0, parseInt(e.target.value || "0"))))}
+                      placeholder="0"
+                      className="p-2 rounded-lg w-full bg-white/5 border border-white/10 placeholder-white/60 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm text-white/70 mb-1">Secondi</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      step={1}
+                      value={maxS}
+                      onChange={(e) => setMaxS(e.target.value === "" ? "" : Math.min(59, Math.max(0, parseInt(e.target.value || "0"))))}
+                      placeholder="0"
+                      className="p-2 rounded-lg w-full bg-white/5 border border-white/10 placeholder-white/60 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-sm text-white/70">
+                  Totale: <span className="font-semibold text-white">{totalMs.toLocaleString()} ms</span> ({pad2(hh)}:{pad2(mm)}:{pad2(ss)})
+                </div>
+
                 <div className="flex gap-2">
-                  <input
-                    name="maxUpdateTime"
-                    type="number"
-                    placeholder="Tempo max di aggiornamento (secondi)"
-                    className="p-2 rounded-lg w-full bg-white/5 border border-white/10 placeholder-white/60 focus:outline-none"
-                    min={1}
-                    defaultValue={parameters?.filter((param: any) => param.keySetting === "maxDispoUpdateTime")[0]?.numberValue}
-                    key={parameters?.filter((param: any) => param.keySetting === "maxDispoUpdateTime")[0]?.numberValue}
-                  />
-                  <button type="submit" className="px-4 bg-blue-500/90 hover:bg-blue-500 rounded-xl flex justify-center items-center gap-2 text-white font-semibold transition">
+                  <button
+                    type="submit"
+                    className="px-4 bg-blue-500/90 hover:bg-blue-500 rounded-xl flex justify-center items-center gap-2 text-white font-semibold transition"
+                  >
                     <MdUpdate/> Aggiorna
                   </button>
                 </div> 

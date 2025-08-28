@@ -10,7 +10,7 @@ const parametersApi = createApi({
         update: builder.mutation({
             query: (data) => ({
                 url: "/update",
-                method: "POST",
+                method: "PATCH",
                 body: data,
             }),
         
