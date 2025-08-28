@@ -3,159 +3,375 @@ import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 import type { RootState } from "../store.ts";
 import { useGetLastQuery } from "../services/apis/logsApi.ts";
 import { DateTime } from "luxon";
-import { GoAlertFill } from "react-icons/go"
+import { GoAlertFill } from "react-icons/go";
 import { FaBug, FaCircle, FaClock, FaWifi } from "react-icons/fa";
-import { VscSettings} from "react-icons/vsc"
-import {BsCpuFill} from "react-icons/bs"
+import { VscSettings } from "react-icons/vsc";
+import { BsCpuFill } from "react-icons/bs";
 import { FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { logout, setCredentials } from "../services/slices/authSlice.ts";
+import { useGetParametersQuery } from "../services/apis/parametersApi.ts";
+import { useCallback, useMemo } from "react";
 
-const calcElapsedTime = (data : string) => {
-    const delta = Date.now() - new Date(data).getTime();
-    const s = Math.floor(delta / 1000);
-    const m = Math.floor(s / 60);
-    const h = Math.floor(m / 60);
-    const d = Math.floor(h / 24);
+const calcElapsedTime = (data: string) => {
+  const delta = Date.now() - new Date(data).getTime();
+  const s = Math.floor(delta / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  const parts = [
+    d ? `${d}d` : "",
+    h % 24 ? `${h % 24}h` : "",
+    m % 60 ? `${m % 60}m` : "",
+    s % 60 || (!d && !h && !m) ? `${s % 60}s` : "",
+  ].filter(Boolean);
+  return parts.join(" ");
+};
 
-   const parts = [
-    d ? `${d}d` : '',
-    h % 24 ? `${h % 24}h` : '',
-    m % 60 ? `${m % 60}m` : '',
-    s % 60 || (!d && !h && !m) ? `${s % 60}s` : ''
-  ].filter(Boolean) 
-  return `${parts.join(' ')}`;
-}
+type ErrorItem = {
+  codifica: string;
+  description: string;
+  limite?: number;
+  time: string;
+  date: string;
+};
 
-const handleLogout = () => {
-    const dispatch = useDispatch()
-    dispatch(setCredentials({user: null, role: null}))
-    dispatch(logout())
-
-}
-
+type WarningItem = {
+  codifica: string;
+  description: string;
+  time: string;
+  date: string;
+};
 
 const Dashboard = () => {
+  const { data: parameters } = useGetParametersQuery({});
+  const user = useSelector((state: RootState) => state.auth.user);
+  const role = useSelector((state: RootState) => state.auth.role).toUpperCase();
 
-    
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const handleLogout = useCallback(() => {
+    dispatch(setCredentials({ user: null, role: null }));
+    dispatch(logout());
+  }, [dispatch]);
 
+  const { data, isLoading } = useGetLastQuery(
+    { daysBefore: 30 },
+    { pollingInterval: 3000 }
+  );
 
-    const user = useSelector((state: RootState) => state.auth.user)
-    const role = useSelector((state: RootState) => state.auth.role).toUpperCase()
-    let elapsedTime = ""
-    let onlineSensorCount = 0
-    let errorCount = 0
-    let erroriAttendibili: any[] = []
-    let erroriNonAttendibili : any[] = []
-    
-    
+  const {
+    elapsedTime,
+    onlineSensorCount,
+    errorCount,
+    erroriAttendibili,
+    erroriNonAttendibili,
+    warnings,
+  } = useMemo(() => {
+    let elapsedTime = "";
+    let onlineSensorCount = 0;
+    let errorCount = 0;
+    const erroriAttendibili: ErrorItem[] = [];
+    const erroriNonAttendibili: ErrorItem[] = [];
+    const warnings: WarningItem[] = [];
 
-
-
-        const { data, isLoading} = useGetLastQuery({daysBefore: 30}, {pollingInterval: 3000})
-        if(!isLoading){
-            console.log(data.data)
-        const ultimo = data.data.reduce((a: any,b: any) => DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b)
-        const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione).toLocal().plus({hours: 2});
-        elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "")
-        onlineSensorCount = data.data.length
-        errorCount = data.data.filter((item: any) => item.isInTempAlarm === true).length
-
-
-        data.data.filter((item: any) => item.isInTempAlarm === true).sort((a: any,b: any) => DateTime.fromISO(b.ts_registrazione).toMillis() - DateTime.fromISO(a.ts_registrazione).toMillis()).forEach((item: any) => {
-            const ts = DateTime.fromISO(item.ts_registrazione).setZone("Europe/Rome").plus({hours: 2})
-            const diffInMinutes = DateTime.now().setZone("Europe/Rome").diff(ts, "minutes").as("minutes")
-
-            const error = {
-                codifica: item.dispo_codifica,
-                description: `Temperatura oltre la soglia di ${(item.temp_calc - item.tempLimit)?.toFixed(1)}°C`,
-                limite: item.tempLimit,
-                time: ts.toFormat("HH:mm:ss"),
-                date: ts.toFormat("dd/MM/yyyy")
-            }
-
-            if(diffInMinutes <= 8){
-                erroriAttendibili.push(error)
-            }else{
-                erroriNonAttendibili.push(error)
-            }
-            
-       })
-        
-
-
-        
-      
+    if (isLoading || !data) {
+      return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
     }
 
-    const navigate = useNavigate()
+    
+    const ultimo = data.data.reduce((a: any, b: any) =>
+      DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b
+    );
+    const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione).toLocal().plus({ hours: 2 });
+    elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "");
+    onlineSensorCount = data.data.length;
+
+    
+    errorCount = data.data.filter((item: any) => item.isInTempAlarm === true).length;
+
+    
+    const dispoWarning = data.data.map((item: any) => {
+      const maxDispoUpdateTime =
+        parameters?.find((param: any) => param.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
+      const ts_registrazione = DateTime.fromISO(item.ts_registrazione).toLocal().plus({ hours: 2 });
+      const diffInMilliseconds = DateTime.now()
+        .setZone("Europe/Rome")
+        .diff(ts_registrazione, "milliseconds")
+        .as("milliseconds");
+      return {
+        id: item.mac_dispo,
+        ts: ts_registrazione,           
+        warning: diffInMilliseconds > maxDispoUpdateTime,
+        delta: diffInMilliseconds,
+      };
+    });
+
+    
+    dispoWarning.forEach((item: any) => {
+      if (!item.warning) return;
+      const humanDelta = ((ms: number) => {
+        let s = Math.floor(ms / 1000),
+          m = Math.floor(s / 60),
+          h = Math.floor(m / 60),
+          d = Math.floor(h / 24);
+        s %= 60; m %= 60; h %= 24;
+        return [
+          d ? `${d} ${d === 1 ? "giorno" : "giorni"}` : "",
+          h ? `${h} ${h === 1 ? "ora" : "ore"}` : "",
+          m ? `${m} ${m === 1 ? "minuto" : "minuti"}` : "",
+          s ? `${s} ${s === 1 ? "secondo" : "secondi"}` : "",
+        ].filter(Boolean).join(", ");
+      })(item.delta);
+
+      warnings.push({
+        codifica: item.id,
+        description: `Il dispositivo ${item.id} non comunica da ${humanDelta}`,
+        time: item.ts.setZone("Europe/Rome").toFormat("HH:mm:ss"),
+        date: item.ts.setZone("Europe/Rome").toFormat("dd/MM/yyyy"),
+      });
+    });
+
+    
+    warnings.sort((a, b) => a.codifica.localeCompare(b.codifica));
+
+    
+    const errorRows: ErrorItem[] = [];
+    data.data
+      .filter((item: any) => item.isInTempAlarm === true)
+      .forEach((item: any) => {
+        const ts = DateTime.fromISO(item.ts_registrazione).setZone("Europe/Rome").plus({ hours: 2 });
+        errorRows.push({
+          codifica: item.dispo_codifica,
+          description: `Temperatura oltre la soglia di ${(item.temp_calc - item.tempLimit)?.toFixed(1)}°C`,
+          limite: item.tempLimit,
+          time: ts.toFormat("HH:mm:ss"),
+          date: ts.toFormat("dd/MM/yyyy"),
+        });
+      });
+
+    
+    errorRows.sort((a, b) => {
+      const ad = DateTime.fromFormat(a.date, "dd/LL/yyyy").toMillis();
+      const bd = DateTime.fromFormat(b.date, "dd/LL/yyyy").toMillis();
+      if (bd !== ad) return bd - ad;
+      if (b.time !== a.time) return b.time.localeCompare(a.time);
+      return a.codifica.localeCompare(b.codifica);
+    });
+
+    errorRows.forEach((e) => {
+      const dt = DateTime.fromFormat(e.date + " " + e.time, "dd/LL/yyyy HH:mm:ss");
+      const diffInMinutes = DateTime.now().setZone("Europe/Rome").diff(dt, "minutes").as("minutes");
+      if (diffInMinutes <= 8) erroriAttendibili.push(e);
+      else erroriNonAttendibili.push(e);
+    });
+
+    return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
+  }, [data, isLoading, parameters]);
+
+  
+  const Section = ({
+    title,
+    count,
+    children,
+  }: {
+    title: string;
+    count: number;
+    children: React.ReactNode;
+  }) => (
+    <div className="bg-gray-900/80 rounded-xl border border-white/5 shadow-md flex flex-col">
+      <div className="sticky top-0 z-10 backdrop-blur bg-gray-900/70 rounded-t-xl border-b border-white/10 px-4 py-3 flex items-center">
+        <h2 className="text-white text-lg font-semibold">{title}</h2>
+        <span className="ml-auto text-xs font-semibold px-2 py-1 rounded-md bg-white/10 text-white/80">
+          {count}
+        </span>
+      </div>
+      <div className="p-3 pt-2">{children}</div>
+    </div>
+  );
+
+  const ErrorCard = ({
+    variant,
+    item,
+  }: {
+    variant: "danger" | "warn" | "notice";
+    item: ErrorItem | WarningItem;
+  }) => {
+    const v =
+      variant === "danger"
+        ? { bg: "bg-red-500/10", b: "border-red-500/30", hover: "hover:bg-red-500/15", dot: "text-red-500" }
+        : variant === "warn"
+        ? { bg: "bg-orange-500/10", b: "border-orange-500/30", hover: "hover:bg-orange-500/15", dot: "text-orange-500" }
+        : { bg: "bg-yellow-500/10", b: "border-yellow-500/30", hover: "hover:bg-yellow-500/15", dot: "text-yellow-400" };
 
     return (
-            <div className="relative w-full overflow-y-hidden h-screen bg-gray-800">
+      <div className={`flex flex-col gap-2 rounded-xl p-3 border ${v.bg} ${v.b} ${v.hover} transition`}>
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold flex items-center text-white text-base">
+            <FaCircle className={`${v.dot} mr-2 h-2 w-2`} />
+            {item.codifica}
+          </h3>
+          <span className="text-gray-300 text-xs font-medium">{item.time}</span>
+        </div>
+        <p className="text-white/90 text-sm">{item.description}</p>
+        {"limite" in item ? (
+          <div className="flex justify-between text-xs text-gray-300">
+            <span className="font-medium">Limite temperatura: {item.limite}°C</span>
+            <span className="font-medium">{item.date}</span>
+          </div>
+        ) : (
+          <div className="flex justify-end text-xs text-gray-300">
+            <span className="font-medium">{item.date}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
-               <div className="h-full">
-                    <div className="flex justify-between px-5 py-3">
-                        <div className="flex gap-5 items-center align-middle leading-none">
-                            <h1 className="text-white text-2xl font-bold">Selezione Rifiuti Urbani</h1>
-                            <h1 className={`text-${errorCount > 0 ? "red-500" : "green-500"} h-[30px] ${errorCount > 0 ? "bg-red-500/20" : "bg-green-500/20"} rounded-full px-2 text-lg flex font-semibold items-center align-middle truncate leading-none`}><FaCircle className= "h-4 w-4 mr-1" color={errorCount > 0 ? "red" : "green"}/>Stato:<span className="ml-1">{errorCount > 0 ? "KO" : "OK"}</span></h1>
-                        </div>
-                    <div className="flex gap-2 items-center justify-center align-middle">
-                        <h1 className="rounded-full p-3 bg-blue-500/69 w-8 h-8 text-white font-semibold flex items-center justify-center">WI</h1>
-                        <div className="flex flex-col">
-                            <h1 className="text-white">{user}</h1>
-                            <p className="text-gray-400">{role}</p>
-                        </div>
-                    </div>
-                </div> 
-                <div className="flex">
-                    <div className="w-[500px] px-3 flex flex-col justify-between h-full">
-                        <div className="bg-gray-900 rounded-xl p-3 flex flex-col gap-4">
-                            <h1 className="text-white text-lg font-semibold">Stato del Sistema</h1>
-                            <h1 className="flex text-lg items-center align-middle text-white font-semibold"><GoAlertFill color="#EF4444" className="h-4 mr-2"/>Stato <span className={`ml-auto ${errorCount>0?"bg-red-500/20 text-red-500":"bg-green-500/20 text-green-500"} px-2 rounded-md font-semibold`}>{errorCount>0?"KO":"OK"}</span></h1>
-                            <h1 className="flex text-lg items-center align-middle text-white font-semibold"><FaBug color="#F59E0B" className="h-4 mr-2"/>Errori <span className={`ml-auto ${errorCount>0?"bg-yellow-500/20 text-yellow-500":"bg-green-500/20 text-green-500"} px-2 rounded-md font-semibold`}>{errorCount}</span></h1>
-                            <h1 className="flex text-lg items-center align-middle text-white font-semibold"><FaWifi color="#10B981" className="h-4 mr-2"/>Dispositivi <span className={`ml-auto bg-green-500/20 text-green-500 px-2 rounded-md font-semibold`}>{onlineSensorCount}</span></h1>
-                            <h1 className="flex text-lg items-center align-middle text-white font-semibold"><FaClock color="#3B82F6" className="h-4 mr-2"/>Ultimo update<span className={`ml-auto px-2 rounded-md font-semibold text-sm`}>{elapsedTime}</span></h1>
-                            <h1></h1>
-                        </div>
-                        <div className="flex flex-col gap-3  mt-[20%] mb-[50%]">
-                            <button onClick={() => navigate("/dispositivi")}className="flex items-center hover:cursor-pointer hover:bg-gray-900/69 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3"><BsCpuFill className="mr-2"/>Log Dispositivi</button>
-                            <button onClick={() => navigate("/sniffer")} className="flex items-center hover:cursor-pointer hover:bg-gray-900/69 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3"><FaWifi className="mr-2"/>Sniffer</button>
-                            <button onClick={() => navigate("/settings")}className="flex items-center hover:cursor-pointer hover:bg-gray-900/69 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3"><VscSettings className="mr-2"/>Impostazioni</button>
-                        </div> 
-
-                        <button onClick={() => logout()}className="flex items-center text-xl font-bold hover:cursor-pointer hover:bg-blue-600/10 text-blue-500 bg-blue-600/20 w-full rounded-xl p-3"><FiLogOut className="mr-2" onClick={() => handleLogout()}/>Logout</button>
-                    </div>
-                    {!isLoading && <InteractivePanel sensorData={data.data}/>}
-                    <div className="h-screen w-[500px] px-3 flex flex-col justify-between">
-                       <div>
-                        <h1 className="text-white text-xl font-semibold mb-5">Errori del Sistema ({erroriAttendibili.length})</h1>
-                        <div className="flex flex-col gap-3 overflow-y-scroll max-h-[50%] scrollbar-custom">
-                            {erroriAttendibili.length > 0 ? erroriAttendibili.map((error: any) => (
-                                <div key={error.id} className="flex flex-col items-start bg-red-500/10 border-red-500/30 border-[0.1px] p-3 rounded-xl">
-                                    <div className="flex justify-between w-full items-center"><h1 className="font-semibold flex items-center align-middle text-white text-lg"><FaCircle className="text-red-500 mr-2 h-2"/>{error.codifica}</h1><h1 className="text-gray-300 text-sm font-semibold">{error.time}</h1></div>
-                                    <h1 className="text-white font-semibold">{error.description}</h1>
-                                    <div className="flex justify-between w-full"><p className="text-gray-300 font-semibold text-sm">Limite temperatura: {error.limite}°C</p><p className="text-gray-300 text-sm font-semibold">{error.date}</p></div>
-                                </div>
-                            )) : ""}
-                        </div>
-                        <h1 className="text-white text-xl font-semibold mb-5">Errori non attendibili ({erroriNonAttendibili.length})</h1>
-                        <div className="flex flex-col gap-3 overflow-y-scroll max-h-[70%] scrollbar-custom">
-                            {erroriNonAttendibili.length > 0 ? erroriNonAttendibili.map((error: any) => (
-                                  <div key={error.id} className="flex flex-col items-start bg-orange-500/10 border-orange-500/30 border-[0.1px] p-3 rounded-xl">
-                                    <div className="flex justify-between w-full items-center"><h1 className="font-semibold flex items-center align-middle text-white text-lg"><FaCircle className="text-orange-500 mr-2 h-2"/>{error.codifica}</h1><h1 className="text-gray-300 text-sm font-semibold">{error.time}</h1></div>
-                                    <h1 className="text-white font-semibold">{error.description}</h1>
-                                    <div className="flex justify-between w-full"><p className="text-gray-300 font-semibold text-sm">Limite temperatura: {error.limite}°C</p><p className="text-gray-300 text-sm font-semibold">{error.date}</p></div>
-                                </div>  
-                            )) : <h1>Non ci sono errori non attendibili nel sistema!</h1>}
-                        </div>
-                        </div> 
-                        <img src="IOTALAB_Logo_RGB.png" className="p-2 pb-25"></img>
-                    </div>
-                </div>
+  return (
+    <div className="relative w-full h-screen bg-gray-800 overflow-hidden">
+      <div className="h-full flex flex-col">
+        {/* Top bar */}
+        <div className="flex justify-between px-5 py-3">
+          <div className="flex gap-5 items-center leading-none">
+            <img src="IOTALAB_Logo_RGB.png" className="p-2 h-[80px]" />
+            <h1 className="text-white text-2xl font-bold">Selezione Rifiuti Urbani</h1>
+            <h1
+              className={`text-${errorCount > 0 ? "red-500" : "green-500"} h-[30px] ${errorCount > 0 ? "bg-red-500/20" : "bg-green-500/20"} rounded-full px-2 text-lg flex font-semibold items-center truncate`}
+            >
+              <FaCircle className="h-4 w-4 mr-1" color={errorCount > 0 ? "red" : "green"} />
+              Stato:<span className="ml-1">{errorCount > 0 ? "KO" : "OK"}</span>
+            </h1>
+          </div>
+          <div className="flex gap-2 items-center">
+            <h1 className="rounded-full p-3 bg-blue-500/69 w-8 h-8 text-white font-semibold flex items-center justify-center">
+              WI
+            </h1>
+            <div className="flex flex-col">
+              <h1 className="text-white">{user}</h1>
+              <p className="text-gray-400">{role}</p>
             </div>
+          </div>
         </div>
 
-    )
-}
+        {/* Content area */}
+        <div className="flex min-h-0 flex-1">
+          {/* Left sidebar */}
+          <div className="w-[500px] px-3 flex flex-col justify-between">
+            <div className="bg-gray-900 rounded-xl p-3 flex flex-col gap-4">
+              <h1 className="text-white text-lg font-semibold">Stato del Sistema</h1>
+              <h1 className="flex text-lg items-center text-white font-semibold">
+                <GoAlertFill color="#EF4444" className="h-4 mr-2" />
+                Stato
+                <span
+                  className={`ml-auto ${errorCount > 0 ? "bg-red-500/20 text-red-500" : "bg-green-500/20 text-green-500"} px-2 rounded-md font-semibold`}
+                >
+                  {errorCount > 0 ? "KO" : "OK"}
+                </span>
+              </h1>
+              <h1 className="flex text-lg items-center text-white font-semibold">
+                <FaBug color="#F59E0B" className="h-4 mr-2" />
+                Errori
+                <span
+                  className={`ml-auto ${errorCount > 0 ? "bg-yellow-500/20 text-yellow-500" : "bg-green-500/20 text-green-500"} px-2 rounded-md font-semibold`}
+                >
+                  {errorCount}
+                </span>
+              </h1>
+              <h1 className="flex text-lg items-center text-white font-semibold">
+                <FaWifi color="#10B981" className="h-4 mr-2" />
+                Dispositivi
+                <span className="ml-auto bg-green-500/20 text-green-500 px-2 rounded-md font-semibold">
+                  {onlineSensorCount}
+                </span>
+              </h1>
+              <h1 className="flex text-lg items-center text-white font-semibold">
+                <FaClock color="#3B82F6" className="h-4 mr-2" />
+                Ultimo update
+                <span className="ml-auto px-2 rounded-md font-semibold text-sm">{elapsedTime}</span>
+              </h1>
+            </div>
+
+            <div className="flex flex-col gap-3 mt-6">
+              <button
+                onClick={() => navigate("/dispositivi")}
+                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3 transition"
+              >
+                <BsCpuFill className="mr-2" />
+                Log Dispositivi
+              </button>
+              <button
+                onClick={() => navigate("/sniffer")}
+                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3 transition"
+              >
+                <FaWifi className="mr-2" />
+                Sniffer
+              </button>
+              <button
+                onClick={() => navigate("/settings")}
+                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900 w-full rounded-xl p-3 transition"
+              >
+                <VscSettings className="mr-2" />
+                Impostazioni
+              </button>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="mt-4 flex items-center text-xl font-bold hover:bg-blue-600/10 text-blue-500 bg-blue-600/20 w-full rounded-xl p-3 transition"
+            >
+              <FiLogOut className="mr-2" />
+              Logout
+            </button>
+          </div>
+
+          {/* Center panel */}
+          {!isLoading && <InteractivePanel sensorData={data?.data ?? []} />}
+
+          {/* Right sidebar: scroll unico */}
+          <div className="h-screen w-[520px] px-3 flex flex-col">
+            <div className="flex flex-col gap-4 flex-1 overflow-y-auto scrollbar-elegant">
+              <Section title="Errori del Sistema" count={erroriAttendibili.length}>
+                {erroriAttendibili.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {erroriAttendibili.map((error) => (
+                      <ErrorCard key={error.codifica} variant="danger" item={error} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">Nessun errore attendibile.</p>
+                )}
+              </Section>
+
+              <Section title="Errori non attendibili" count={erroriNonAttendibili.length}>
+                {erroriNonAttendibili.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {erroriNonAttendibili.map((error) => (
+                      <ErrorCard key={error.codifica} variant="warn" item={error} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">Nessun errore non attendibile nel sistema.</p>
+                )}
+              </Section>
+
+              <Section title="Warnings" count={warnings.length}>
+                {warnings.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {warnings.map((warning) => (
+                      <ErrorCard key={warning.codifica} variant="notice" item={warning} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">Nessun warning al momento.</p>
+                )}
+              </Section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default Dashboard;
