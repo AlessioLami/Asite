@@ -7,11 +7,17 @@ Panoramica impianto
 ![view dettaglia](./immagini_github/detailed_view_conveyor2.png)
 Overview dettagliata Nastro Trasportatore
 
+![whitelist](./immagini_github/whitelist.png)
+Whitelist
+
+![dispositivi](./immagini_github/dispositivi.png)
+Dispositivi
+
+![unita](./immagini_github/unita.png)
+Unità
+
 ![login](./immagini_github/login.png)
 Login Form
 
 ![register](./immagini_github/register.png)
 Register Form
-
-![whitelist](./immagini_github/whitelist.png)
-Whitelist
