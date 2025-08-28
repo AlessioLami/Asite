@@ -4,8 +4,16 @@ Il frontend di asite serve a monitorare l'impianto di selezione dei rifiuti urba
 ![panoramica](./immagini_github/dashboard.png)
 Panoramica impianto
 
-![view dettaglia](./immagini_github/detailed_view_conveyor2.png)
+
+![view dettaglia](./immagini_github/detailed_view_conveyor.png)
 Overview dettagliata Nastro Trasportatore
+
+![view dettaglia2](./immagini_github/detailed_view_vaglio.png)
+Overview dettagliata Vaglio
+
+
+![log_dispositivi](./immagini_github/log_dispositivi.png)
+Log Dispositivi
 
 ![whitelist](./immagini_github/whitelist.png)
 Whitelist
@@ -16,8 +24,8 @@ Dispositivi
 ![unita](./immagini_github/unita.png)
 Unità
 
-![login](./immagini_github/login.png)
-Login Form
+![parameters](./immagini_github/parametri.png)
+Parametri
 
-![register](./immagini_github/register.png)
-Register Form
+![sniffer](./immagini_github/sniffer.png)
+Sniffer
