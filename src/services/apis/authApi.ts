@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const authApi = createApi({
     reducerPath: "authApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: "/api/auth",
+        baseUrl: "https://asitesens-api.iotalab.app/auth",
         credentials: "include",
     }),
     endpoints: (builder) => ({
