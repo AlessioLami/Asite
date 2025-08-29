@@ -21,6 +21,7 @@ const App = () => {
     
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<a href="/dashboard">TEST</a>}/>
         <Route path="/login" element={<Login />}/>
         <Route path="/register" element={<Register/>}/>
         <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
