@@ -38,7 +38,7 @@ const Conveyor3Info = () => {
   const controlsRef = useRef(null);
   const navigate = useNavigate();
 
-  const { scene } = useGLTF("src/assets/models/rullo3.glb") as any;
+  const { scene } = useGLTF("/models/rullo3.glb") as any;
   scene.scale.set(100, 100, 100);
   scene.position.set(0, 0, 10);
   scene.rotation.set((-90 * Math.PI) / 180, 0, (-90 * Math.PI) / 180);

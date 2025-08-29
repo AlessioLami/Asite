@@ -93,7 +93,7 @@ const ConveyorInfo = () => {
     [errorsData]
   );
 
-  const { scene } = useGLTF("src/assets/models/rullo1.glb") as any;
+  const { scene } = useGLTF("/models/rullo1.glb") as any;
   scene.scale.set(100, 100, 100);
   scene.position.set(-4, 0, 2);
   scene.rotation.set(

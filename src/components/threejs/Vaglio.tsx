@@ -8,7 +8,7 @@ import { useFrame } from "@react-three/fiber";
 const EDGES_KEY = "_edgesHelper";
 
 const Vaglio = ({ hasError }: ErrorProps) => {
-  const { scene } = useGLTF("src/assets/models/vaglio.glb");
+  const { scene } = useGLTF("/models/vaglio.glb");
   const glowRef = useRef<THREE.Mesh>(null);
   const navigate = useNavigate();
 

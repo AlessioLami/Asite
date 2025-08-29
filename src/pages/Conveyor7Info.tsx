@@ -38,7 +38,7 @@ const Conveyor7Info = () => {
   const controlsRef = useRef(null);
   const navigate = useNavigate();
 
-  const { scene } = useGLTF("src/assets/models/rullo7.glb") as any;
+  const { scene } = useGLTF("/models/rullo7.glb") as any;
   scene.scale.set(100, 100, 100);
   scene.position.set(-7, 0, 5);
   scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (180 * Math.PI) / 180);

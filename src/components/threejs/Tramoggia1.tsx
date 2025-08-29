@@ -5,7 +5,7 @@ import type { ErrorProps } from './Macchinario'
 
 const Tramoggia1 = ({hasError}: ErrorProps) => {
 
-  const { scene } = useGLTF('src/assets/models/tramoggia1.glb')
+  const { scene } = useGLTF('/models/tramoggia1.glb')
   const glowRef = useRef<THREE.Mesh>(null)
 
   scene.scale.set(50, 50, 50)

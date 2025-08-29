@@ -8,7 +8,7 @@ import { useFrame } from "@react-three/fiber";
 const EDGES_KEY = "_edgesHelper";
 
 const BagOpener = ({ hasError }: ErrorProps) => {
-  const { scene } = useGLTF("src/assets/models/aprisacchi.glb");
+  const { scene } = useGLTF("/models/aprisacchi.glb");
   const navigate = useNavigate();
   const glowRef = useRef<THREE.Mesh>(null);
 

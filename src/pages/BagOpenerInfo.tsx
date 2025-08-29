@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 
 const BagOpenerInfo = () => {
-  const { scene } = useGLTF("src/assets/models/aprisacchi.glb");
+  const { scene } = useGLTF("/models/aprisacchi.glb");
   scene.scale.set(100, 100, 100);
   scene.position.set(20, 0, 4);
   scene.rotation.set((-90 * Math.PI) / 180, 0, Math.PI / 2);

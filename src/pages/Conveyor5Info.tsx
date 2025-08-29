@@ -38,8 +38,7 @@ const Conveyor5Info = () => {
   const controlsRef = useRef(null);
   const navigate = useNavigate();
 
-  // Modello 3D (+ eventuale clone)
-  const { scene } = useGLTF("src/assets/models/rullo5.glb") as any;
+  const { scene } = useGLTF("models/rullo5.glb") as any;
   scene.scale.set(70, 70, 70);
   scene.position.set(25, 0, 12);
   scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, (90 * Math.PI) / 180);

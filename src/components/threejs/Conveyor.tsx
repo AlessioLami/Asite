@@ -8,7 +8,7 @@ import { useFrame } from "@react-three/fiber";
 const EDGES_KEY = "_edgesHelper";
 
 const Conveyor = ({ hasError }: ErrorProps) => {
-  const { scene } = useGLTF("src/assets/models/rullo1.glb");
+  const { scene } = useGLTF("/models/rullo1.glb");
   const glowRef = useRef<THREE.Mesh>(null);
   const navigate = useNavigate();
 

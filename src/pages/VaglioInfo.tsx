@@ -88,7 +88,7 @@ const VaglioInfo = () => {
   const hasM7 = useMemo(() => errorsData.some((e) => e?.unita_misurata === "M7"), [errorsData]);
   const hasM8 = useMemo(() => errorsData.some((e) => e?.unita_misurata === "M8"), [errorsData]);
 
-  const { scene } = useGLTF("src/assets/models/vaglio.glb") as any;
+  const { scene } = useGLTF("/models/vaglio.glb") as any;
   scene.scale.set(100, 100, 100);
   scene.position.set(4, 0, 7);
   scene.rotation.set((90 * Math.PI) / 180, (180 * Math.PI) / 180, 0);
