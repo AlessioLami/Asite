@@ -2,17 +2,17 @@ import { useNavigate } from "react-router-dom";
 
 const screenshots = [
   {
-    src: "./immagini_github/dashboard.png",
+    src: "/dashboard.png",
     title: "Pannello principale",
     desc: "Vista sinottica con monitoraggio in tempo reale di motori e sensori dell’impianto.",
   },
   {
-    src: "./immagini_github/log_dispositivi.png",
+    src: "/log_dispositivi.png",
     title: "Log dispositivi",
     desc: "Storico eventi dei dispositivi con dettagli sugli errori e gli stati di comunicazione.",
   },
   {
-    src: "./immagini_github/dispositivi.png",
+    src: "/dispositivi.png",
     title: "Impostazioni",
     desc: "Configurazione dispositivi, unità, e parametri per il sistema di monitoraggio.",
   },
