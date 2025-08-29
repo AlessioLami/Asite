@@ -1,6 +1,9 @@
 # Asite Frontend
 Il frontend di asite serve a monitorare l'impianto di selezione dei rifiuti urbani.
 
+![home](./immagini_github/home.png)
+Homepage / Landing page del portale asite
+
 ![panoramica](./immagini_github/dashboard.png)
 Panoramica impianto
 
