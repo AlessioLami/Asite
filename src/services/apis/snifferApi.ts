@@ -8,7 +8,7 @@ const snifferApi = createApi({
     }),
     endpoints: (builder) => ({
         getSniffer: builder.query({
-            query: () => `getlogsniffer`,
+            query: ({dateStart, dateStop}) => `getlogsniffer?dateStart=${dateStart}&dateStop=${dateStop}`,
         })
     }),
 

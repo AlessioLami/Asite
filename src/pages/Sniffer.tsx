@@ -1,9 +1,39 @@
 import { FiArrowLeft } from 'react-icons/fi';
 import { useGetSnifferQuery } from '../services/apis/snifferApi';
 import { DateTime } from 'luxon';
+import { Calendar } from '../components/ui/calendar';
+import type { DateRange } from 'react-day-picker';
+import { useState } from 'react';
+
+type DateRange = {
+  from: Date;
+  to: Date;
+};
 
 const Sniffer = () => {
-  const { data, error, refetch } = useGetSnifferQuery({});
+
+   const today = new Date();
+  const fiveDaysAgo = new Date();
+  fiveDaysAgo.setDate(today.getDate() - 5);
+
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: fiveDaysAgo,
+    to: today,
+  });
+
+  const handleDateChange = (range: { from?: Date; to?: Date }) => {
+    if (!range.from || !range.to) return;
+    setDateRange({ from: range.from, to: range.to });
+    refetch();
+  };
+
+
+
+  const { data, error, refetch } = useGetSnifferQuery({
+    dateStart: dateRange ? DateTime.fromJSDate(dateRange.from).toISO({ includeOffset: false }) : undefined,
+    dateStop: dateRange ? DateTime.fromJSDate(dateRange.to).toISO({ includeOffset: false }) : undefined,
+  });
+
 
   if (error) {
     refetch();
@@ -70,7 +100,42 @@ const Sniffer = () => {
           </a>
           <h1 className="text-4xl font-extrabold tracking-tight">SNIFFER</h1>
         </div>
+        <div className="rounded-2xl p-3 bg-white/5 border border-white/10 backdrop-blur">
+  <Calendar
+    mode="range"
+    required
+    selected={dateRange}
+    onSelect={handleDateChange}
+    style={{
+      ["--rdp-background-color" as any]: "transparent",
+      ["--rdp-cell-size" as any]: "34px",
+      ["--rdp-accent-color" as any]: "rgb(56 189 248)", // sky-400
+    }}
+    className="
+      w-full !bg-transparent
+      /* testi in dark */
+      [&_.rdp-caption_label]:text-white
+      [&_.rdp-head_cell]:text-white/70
+      [&_.rdp-day]:text-white
 
+      /* --- FIX RANGE --- */
+      /* z-index sopra il background del day: i numeri non vengono coperti */
+      [&_.rdp-day_button]:relative [&_.rdp-day_button]:z-[1]
+
+      /* Colore della striscia centrale del range (non bianca, semi-trasparente) */
+      [&_.rdp-day_range_middle]:bg-sky-400/15
+
+      [&_.rdp-day_range_start_.rdp-day_button]:!bg-sky-400
+      [&_.rdp-day_range_end_.rdp-day_button]:!bg-sky-400
+      [&_.rdp-day_selected_.rdp-day_button]:!bg-sky-400 text-white
+      [&_.rdp-day_range_start_.rdp-day_button]:!rounded-l-full !text-white
+      [&_.rdp-day_range_end_.rdp-day_button]:!rounded-r-full !text-white
+
+      /* Evita arrotondamenti nel tratto centrale */
+      [&_.rdp-day_range_middle_.rdp-day_button]:!rounded-none
+    "
+  />
+</div>
         <div className="w-full flex flex-col justify-start text-start rounded-2xl p-4 bg-white/5 border border-white/10 backdrop-blur">
           <h2 className="text-xl font-bold mb-3">Livello di Batteria degli Sniffer</h2>
           <div className="w-full space-y-2">
