@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const snifferApi = createApi({
     reducerPath: "snifferApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: "/api/logsniffer",
+        baseUrl: "https://asitesens-api.iotalab.app/logsniffer",
         credentials: "include",
     }),
     endpoints: (builder) => ({

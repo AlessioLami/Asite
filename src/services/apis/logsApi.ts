@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const logsApi = createApi({
     reducerPath: "logsApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: "/api/logdispo",
+        baseUrl: "https://asitesens-api.iotalab.app/logdispo",
         credentials: "include",
     }),
     endpoints: (builder) => ({

@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const whitelistApi = createApi({
     reducerPath: "whitelistApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: "/api/usersteam",
+        baseUrl: "https://asitesens-api.iotalab.app/usersteam",
         credentials: "include",
     }),
     endpoints: (builder) => ({

@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const unitaApi = createApi({
     reducerPath: "unitaApi",
     baseQuery: fetchBaseQuery({
-        baseUrl: "/api/unitamisurata",
+        baseUrl: "https://asitesens-api.iotalab.app/unitamisurata",
         credentials: "include",
     }),
     endpoints: (builder) => ({
