@@ -44,25 +44,21 @@ const Conveyor2Info = () => {
     { pollingInterval: 3000 }
   );
 
-  // Dati base
   const rows: LogItem[] = useMemo(
     () => (Array.isArray(data?.data) ? (data!.data as LogItem[]) : []),
     [data]
   );
 
-  // Solo M3
   const conveyorRows = useMemo(
     () => rows.filter((r) => ["M3"].includes(r?.unita_misurata ?? "")),
     [rows]
   );
 
-  // Solo errori temperatura
   const errorsData = useMemo(
     () => conveyorRows.filter((r) => r?.isInTempAlarm === true),
     [conveyorRows]
   );
 
-  // Ordinamento per timestamp (discendente) + mapping
   const errors: ErrorItem[] = useMemo(() => {
     return errorsData
       .slice()
@@ -94,7 +90,6 @@ const Conveyor2Info = () => {
     [errorsData]
   );
 
-  // Modello 3D
   const { scene } = useGLTF("src/assets/models/rullo2.glb") as any;
   scene.scale.set(100, 100, 100);
   scene.position.set(0, 2, 13);
@@ -115,7 +110,6 @@ const Conveyor2Info = () => {
         backgroundSize: "auto,auto,auto,40px 40px,40px 40px",
       }}
     >
-      {/* Overlay UI */}
       <div className="absolute inset-0 z-[100] pointer-events-none p-10 flex">
         <div className="space-y-3">
           <h1
@@ -176,7 +170,6 @@ const Conveyor2Info = () => {
         </div>
       </div>
 
-      {/* Viewer 3D */}
       <Canvas
         className="relative z-[1] w-full h-full !bg-transparent"
         shadows
@@ -194,7 +187,6 @@ const Conveyor2Info = () => {
       >
         <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} />
 
-        {/* Illuminazione “studio” */}
         <ambientLight intensity={0.6} />
         <hemisphereLight
           args={["#bcd3ff", "#1f2937", 0.6]}
@@ -213,7 +205,6 @@ const Conveyor2Info = () => {
         <directionalLight position={[-12, 10, -6]} intensity={0.6} />{/* fill */}
         <directionalLight position={[0, 12, -20]} intensity={0.8} /> {/* rim/back */}
 
-        {/* HDRI morbida + ombre a contatto */}
         <Environment preset="warehouse" />
         <ContactShadows
           opacity={0.35}
@@ -223,7 +214,6 @@ const Conveyor2Info = () => {
           position={[0, -0.001, 0]}
         />
 
-        {/* Badge M3 in errore (glass + neon red) */}
         {hasM3 && (
           <Html position={[-2, 0, 5]} center>
             <div

@@ -50,7 +50,6 @@ const Conveyor5Info = () => {
   scene2.position.set(-19, 0, 0);
   scene2.rotation.set(0, Math.PI, 0);
 
-  // Dati
   const { data, isLoading } = useGetLastQuery(
     { daysBefore: 60 },
     { pollingInterval: 3000 }
@@ -61,19 +60,16 @@ const Conveyor5Info = () => {
     [data]
   );
 
-  // Solo M13/M14
   const conveyorRows = useMemo(
     () => rows.filter((r) => ["M13", "M14"].includes(r?.unita_misurata ?? "")),
     [rows]
   );
 
-  // Solo errori temperatura
   const errorsData = useMemo(
     () => conveyorRows.filter((r) => r?.isInTempAlarm === true),
     [conveyorRows]
   );
 
-  // Ordinamento per timestamp (discendente) + mapping
   const errors: ErrorItem[] = useMemo(() => {
     return errorsData
       .slice()
@@ -118,7 +114,6 @@ const Conveyor5Info = () => {
         backgroundSize: "auto,auto,auto,40px 40px,40px 40px",
       }}
     >
-      {/* Overlay UI */}
       <div className="absolute inset-0 z-[100] pointer-events-none p-10 flex">
         <div className="space-y-3">
           <h1
@@ -171,7 +166,6 @@ const Conveyor5Info = () => {
         </div>
       </div>
 
-      {/* Viewer 3D */}
       <Canvas
         className="relative z-[1] w-full h-full !bg-transparent"
         shadows
@@ -180,16 +174,15 @@ const Conveyor5Info = () => {
         onCreated={({ gl, scene: scn, camera }) => {
           gl.outputColorSpace = THREE.SRGBColorSpace;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.2; // più luminoso
+          gl.toneMappingExposure = 1.2; 
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
-          scn.background = null; // Canvas trasparente -> si vede la griglia
+          scn.background = null; 
           camera.up.set(0, 1, 0);
         }}
       >
         <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} />
 
-        {/* Illuminazione “studio” */}
         <ambientLight intensity={0.6} />
         <hemisphereLight args={["#bcd3ff", "#1f2937", 0.6]} position={[0, 1, 0]} />
         <directionalLight
@@ -205,11 +198,9 @@ const Conveyor5Info = () => {
         <directionalLight position={[-12, 10, -6]} intensity={0.6} /> {/* fill */}
         <directionalLight position={[0, 12, -20]} intensity={0.8} />   {/* rim/back */}
 
-        {/* HDRI morbida + ombre a contatto */}
         <Environment preset="warehouse" />
         <ContactShadows opacity={0.35} scale={100} blur={2.6} far={30} position={[0, -0.001, 0]} />
 
-        {/* Badge M14 */}
         {hasM14 && (
           <Html position={[9, -1, 0]} center>
             <div
@@ -235,7 +226,6 @@ const Conveyor5Info = () => {
           </Html>
         )}
 
-        {/* Badge M13 */}
         {hasM13 && (
           <Html position={[5, -1, 0]} center>
             <div
@@ -261,7 +251,6 @@ const Conveyor5Info = () => {
           </Html>
         )}
 
-        {/* Modello + (eventuale) clone */}
         <group>
           <primitive object={scene} castShadow receiveShadow />
           <primitive object={scene2} castShadow receiveShadow />

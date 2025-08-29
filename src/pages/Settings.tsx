@@ -55,7 +55,6 @@ const Settings = () => {
   const {data: dispoData, error: dispoError, refetch: refetchDispo} = useGetDispoQuery({})
   const {data: unitaData, error: unitaError, refetch: refetchUnita} = useGetUnitaQuery({})
 
-  // PARAMETRI
   const { data: paramsData, error: paramsError, isLoading: paramsLoading, refetch: refetchParams } = useGetParametersQuery({})
   const [updateParameters] = useUpdateMutation()
 
@@ -70,7 +69,6 @@ const Settings = () => {
 
   const [codificaUnita, setCodificaUnita] = useState("")
 
-  // liste derivate come nel resto
   let whitelist = whitelistData ?? []    
   if(whitelistError && "status" in whitelistError){
     whitelist = whitelistError.status === 400 ? [] : whitelistData ?? []
@@ -217,12 +215,10 @@ const Settings = () => {
     }
   }
 
-  // ---------------- PARAMETRI: H/M/S state per maxDispoUpdateTime (ms)
   const [maxH, setMaxH] = useState<number | ''>('');
   const [maxM, setMaxM] = useState<number | ''>('');
   const [maxS, setMaxS] = useState<number | ''>('');
 
-  // Popola H/M/S quando arrivano i parametri
   useEffect(() => {
     if (!paramsLoading && !paramsError && parameters) {
       const ms: number = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0
@@ -269,7 +265,6 @@ const Settings = () => {
       return
     }
 
-    // recupera il parametro esistente
     const param = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")
     if (!param) {
       toast.error("Parametro non trovato.")
@@ -312,7 +307,6 @@ const Settings = () => {
     >
       <Toaster position="top-center" richColors/>
       
-      {/* Sidebar */}
       <div className="flex flex-col gap-10 p-10 border-r border-white/10 bg-white/5 backdrop-blur min-w-[280px]">
         <div className="flex flex-col gap-3">
           <a
@@ -365,7 +359,6 @@ const Settings = () => {
         </div>
       </div> 
 
-      {/* WHITELIST */}
       {section == "whitelist" && (
         <div className="p-10 flex flex-col gap-4 w-full">
           <h1 className="text-4xl font-bold">WHITELIST</h1>
@@ -425,7 +418,6 @@ const Settings = () => {
         </div>
       )}
 
-      {/* DISPOSITIVI */}
       {section == "dispositivi" && (
         <div className="p-10 flex flex-col gap-4 w-full">
           <h1 className="text-4xl font-bold">DISPOSITIVI</h1>
@@ -496,7 +488,6 @@ const Settings = () => {
         </div>
       )}
 
-      {/* UNITA */}
       {section == "unita" && (
         <div className="p-10 flex flex-col gap-4 w-full">
           <h1 className="text-4xl font-bold">UNITA' MISURATE</h1>
@@ -545,7 +536,6 @@ const Settings = () => {
         </div>
       )}
 
-      {/* PARAMETRI */}
       {section == "parametri" && (
         <div className="p-10 flex flex-col gap-4 w-full">
           <h1 className="text-4xl font-bold">PARAMETRI</h1>

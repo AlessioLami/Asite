@@ -118,7 +118,6 @@ const Dispositivi = () => {
     required
     selected={dateRange}
     onSelect={handleDateChange}
-    /* forzo le vars (niente pannello bianco) */
     style={{
       ["--rdp-background-color" as any]: "transparent",
       ["--rdp-cell-size" as any]: "34px",
@@ -226,7 +225,6 @@ const Dispositivi = () => {
         </div>
       </div>
 
-      {/* COLONNA DESTRA */}
       <div className="w-full">
         <table className="w-full rounded-2xl text-left overflow-hidden bg-white/5 border border-white/10 backdrop-blur">
           <thead className="bg-gray-900/70 border-b border-white/10 sticky top-0 z-10">

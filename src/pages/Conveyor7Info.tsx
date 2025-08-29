@@ -39,7 +39,6 @@ const Conveyor7Info = () => {
   const controlsRef = useRef(null);
   const navigate = useNavigate();
 
-  // Modello 3D + clone (clone lasciato per coerenza con l'originale)
   const { scene } = useGLTF("src/assets/models/rullo7.glb") as any;
   scene.scale.set(100, 100, 100);
   scene.position.set(-7, 0, 5);
@@ -50,7 +49,6 @@ const Conveyor7Info = () => {
   scene2.position.set(-19, 0, 0);
   scene2.rotation.set(0, Math.PI, 0);
 
-  // Dati
   const { data, isLoading } = useGetLastQuery(
     { daysBefore: 60 },
     { pollingInterval: 3000 }
@@ -61,19 +59,16 @@ const Conveyor7Info = () => {
     [data]
   );
 
-  // Solo M10/M11 (come nel file originale)
   const conveyorRows = useMemo(
     () => rows.filter((r) => ["M10", "M11"].includes(r?.unita_misurata ?? "")),
     [rows]
   );
 
-  // Solo errori temperatura
   const errorsData = useMemo(
     () => conveyorRows.filter((r) => r?.isInTempAlarm === true),
     [conveyorRows]
   );
 
-  // Ordinamento per timestamp (discendente) + mapping
   const errors: ErrorItem[] = useMemo(() => {
     return errorsData
       .slice()
@@ -118,7 +113,6 @@ const Conveyor7Info = () => {
         backgroundSize: "auto,auto,auto,40px 40px,40px 40px",
       }}
     >
-      {/* Overlay UI */}
       <div className="absolute inset-0 z-[100] pointer-events-none p-10 flex">
         <div className="space-y-3">
           <h1
@@ -170,7 +164,6 @@ const Conveyor7Info = () => {
         </div>
       </div>
 
-      {/* Viewer 3D */}
       <Canvas
         className="relative z-[1] w-full h-full !bg-transparent"
         shadows
@@ -188,7 +181,6 @@ const Conveyor7Info = () => {
       >
         <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} />
 
-        {/* Illuminazione “studio” */}
         <ambientLight intensity={0.6} />
         <hemisphereLight args={["#bcd3ff", "#1f2937", 0.6]} position={[0, 1, 0]} />
         <directionalLight
@@ -204,7 +196,6 @@ const Conveyor7Info = () => {
         <directionalLight position={[-12, 10, -6]} intensity={0.6} />
         <directionalLight position={[0, 12, -20]} intensity={0.8} />
 
-        {/* HDRI + ombre a contatto soft */}
         <Environment preset="warehouse" />
         <ContactShadows opacity={0.35} scale={100} blur={2.6} far={30} position={[0, -0.001, 0]} />
 
@@ -260,7 +251,6 @@ const Conveyor7Info = () => {
 
         <group>
           <primitive object={scene} castShadow receiveShadow />
-          {/* scene2 definito ma non renderizzato per non alterare la scena */}
         </group>
 
         <Pavimento />

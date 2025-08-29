@@ -86,7 +86,6 @@ const Sniffer = () => {
         backgroundSize: 'auto,auto,auto,40px 40px,40px 40px',
       }}
     >
-      {/* COLONNA SINISTRA */}
       <div className="flex flex-col gap-10 w-full max-w-[300px]">
         <div className="flex flex-col gap-3">
           <a
@@ -141,7 +140,6 @@ const Sniffer = () => {
             {chartData.map((log) => (
               <div key={log.name} className="flex items-center justify-between text-xs font-semibold">
                 <span className="text-white/90">{log.name}</span>
-                {/* barra: mantengo lo stesso elemento/struttura, solo classi */}
                 <h1
                   className="rounded-md px-2 py-1 mt-1 text-black shadow-sm"
                   style={{
@@ -157,7 +155,6 @@ const Sniffer = () => {
         </div>
       </div>
 
-      {/* TABELLA */}
       <div className="w-full">
         <table className="w-full rounded-2xl text-left overflow-hidden bg-white/5 border border-white/10 backdrop-blur">
           <thead className="bg-gray-900/70 border-b border-white/10 sticky top-0 z-10">

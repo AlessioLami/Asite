@@ -44,25 +44,21 @@ const VaglioInfo = () => {
     { pollingInterval: 3000 }
   );
 
-  // Dati di base
   const rows: LogItem[] = useMemo(
     () => (Array.isArray(data?.data) ? (data!.data as LogItem[]) : []),
     [data]
   );
 
-  // Solo M6/M7/M8
   const vaglioRows = useMemo(
     () => rows.filter((r) => ["M6", "M7", "M8"].includes(r?.unita_misurata ?? "")),
     [rows]
   );
 
-  // Solo errori temperatura
   const errorsData = useMemo(
     () => vaglioRows.filter((r) => r?.isInTempAlarm === true),
     [vaglioRows]
   );
 
-  // Ordinamento per timestamp (discendente) + mapping
   const errors: ErrorItem[] = useMemo(() => {
     return errorsData
       .slice()
@@ -93,7 +89,6 @@ const VaglioInfo = () => {
   const hasM7 = useMemo(() => errorsData.some((e) => e?.unita_misurata === "M7"), [errorsData]);
   const hasM8 = useMemo(() => errorsData.some((e) => e?.unita_misurata === "M8"), [errorsData]);
 
-  // Modello 3D
   const { scene } = useGLTF("src/assets/models/vaglio.glb") as any;
   scene.scale.set(100, 100, 100);
   scene.position.set(4, 0, 7);
@@ -114,7 +109,6 @@ const VaglioInfo = () => {
         backgroundSize: "auto,auto,auto,40px 40px,40px 40px",
       }}
     >
-      {/* Overlay UI */}
       <div className="absolute inset-0 z-[100] pointer-events-none p-10 flex">
         <div className="space-y-3">
           <h1
@@ -166,7 +160,6 @@ const VaglioInfo = () => {
         </div>
       </div>
 
-      {/* Viewer 3D */}
       <Canvas
         className="relative z-[1] w-full h-full !bg-transparent"
         shadows
@@ -184,7 +177,6 @@ const VaglioInfo = () => {
       >
         <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} />
 
-        {/* Illuminazione “studio” */}
         <ambientLight intensity={0.6} />
         <hemisphereLight args={["#bcd3ff", "#1f2937", 0.6]} position={[0, 1, 0]} />
         <directionalLight
@@ -200,7 +192,6 @@ const VaglioInfo = () => {
         <directionalLight position={[-12, 10, -6]} intensity={0.6} />
         <directionalLight position={[0, 12, -20]} intensity={0.8} />
 
-        {/* HDRI + ombre a contatto soft */}
         <Environment preset="warehouse" />
         <ContactShadows opacity={0.35} scale={100} blur={2.6} far={30} position={[0, -0.001, 0]} />
 

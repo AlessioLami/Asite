@@ -39,7 +39,6 @@ const Conveyor4Info = () => {
   const controlsRef = useRef(null);
   const navigate = useNavigate();
 
-  // Modello 3D + clone
   const { scene } = useGLTF("src/assets/models/rullo4.glb") as any;
   scene.scale.set(69, 69, 69);
   scene.position.set(5, 0, 12);
@@ -50,7 +49,6 @@ const Conveyor4Info = () => {
   scene2.position.set(-19, 0, 0);
   scene2.rotation.set(0, Math.PI, 0);
 
-  // Dati
   const { data, isLoading } = useGetLastQuery(
     { daysBefore: 60 },
     { pollingInterval: 3000 }
@@ -61,19 +59,16 @@ const Conveyor4Info = () => {
     [data]
   );
 
-  // Solo M12/M13/M14
   const conveyorRows = useMemo(
     () => rows.filter((r) => ["M12", "M13", "M14"].includes(r?.unita_misurata ?? "")),
     [rows]
   );
 
-  // Solo errori temperatura
   const errorsData = useMemo(
     () => conveyorRows.filter((r) => r?.isInTempAlarm === true),
     [conveyorRows]
   );
 
-  // Ordinamento per timestamp (discendente) + mapping
   const errors: ErrorItem[] = useMemo(() => {
     return errorsData
       .slice()
@@ -120,7 +115,6 @@ const Conveyor4Info = () => {
         backgroundSize: "auto,auto,auto,40px 40px,40px 40px",
       }}
     >
-      {/* Overlay UI */}
       <div className="absolute inset-0 z-[100] pointer-events-none p-10 flex">
         <div className="space-y-3">
           <h1
@@ -172,7 +166,6 @@ const Conveyor4Info = () => {
         </div>
       </div>
 
-      {/* Viewer 3D */}
       <Canvas
         className="relative z-[1] w-full h-full !bg-transparent"
         shadows
@@ -190,7 +183,6 @@ const Conveyor4Info = () => {
       >
         <OrthographicCamera makeDefault position={[10, 10, 10]} zoom={50} />
 
-        {/* Illuminazione “studio” */}
         <ambientLight intensity={0.6} />
         <hemisphereLight args={["#bcd3ff", "#1f2937", 0.6]} position={[0, 1, 0]} />
         <directionalLight
@@ -206,11 +198,9 @@ const Conveyor4Info = () => {
         <directionalLight position={[-12, 10, -6]} intensity={0.6} /> {/* fill */}
         <directionalLight position={[0, 12, -20]} intensity={0.8} />   {/* rim/back */}
 
-        {/* HDRI morbida + ombre a contatto */}
         <Environment preset="warehouse" />
         <ContactShadows opacity={0.35} scale={90} blur={2.6} far={30} position={[0, -0.001, 0]} />
 
-        {/* Badge M12 in errore (glass + neon red) */}
         {hasM12 && (
           <Html position={[3, 11, 10]} center>
             <div
@@ -236,7 +226,6 @@ const Conveyor4Info = () => {
           </Html>
         )}
 
-        {/* Modello + clone */}
         <group>
           <primitive object={scene} castShadow receiveShadow />
         </group>

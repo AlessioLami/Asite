@@ -15,13 +15,14 @@ import Sniffer from "./pages/Sniffer";
 import Conveyor5Info from "./pages/Conveyor5Info";
 import Conveyor6Info from "./pages/Conveyor6Info";
 import Conveyor7Info from "./pages/Conveyor7Info";
+import Home from "./pages/Home"
 
 const App = () => {
   return (
     
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<a href="/dashboard">TEST</a>}/>
+        <Route path="/" element={<Home/>}/>
         <Route path="/login" element={<Login />}/>
         <Route path="/register" element={<Register/>}/>
         <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>

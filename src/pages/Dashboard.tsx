@@ -79,7 +79,6 @@ const Dashboard = () => {
       return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
     }
 
-    // ultimo timestamp
     const ultimo = data.data.reduce((a: any, b: any) =>
       DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b
     );
@@ -87,10 +86,8 @@ const Dashboard = () => {
     elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "");
     onlineSensorCount = data.data.length;
 
-    // errori temperatura
     errorCount = data.data.filter((item: any) => item.isInTempAlarm === true).length;
 
-    // warnings comunicazione (ritardo aggiornamento)
     const dispoWarning = data.data.map((item: any) => {
       const maxDispoUpdateTime =
         parameters?.find((param: any) => param.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
@@ -131,10 +128,8 @@ const Dashboard = () => {
       });
     });
 
-    // ordina warnings per codifica
     warnings.sort((a, b) => a.codifica.localeCompare(b.codifica));
 
-    // costruzione errori
     const errorRows: ErrorItem[] = [];
     data.data
       .filter((item: any) => item.isInTempAlarm === true)
@@ -149,7 +144,6 @@ const Dashboard = () => {
         });
       });
 
-    // ordina errori (data/ora desc, poi codifica)
     errorRows.sort((a, b) => {
       const ad = DateTime.fromFormat(a.date, "dd/LL/yyyy").toMillis();
       const bd = DateTime.fromFormat(b.date, "dd/LL/yyyy").toMillis();
@@ -158,7 +152,6 @@ const Dashboard = () => {
       return a.codifica.localeCompare(b.codifica);
     });
 
-    // attendibilità: <= 8 minuti
     errorRows.forEach((e) => {
       const dt = DateTime.fromFormat(e.date + " " + e.time, "dd/LL/yyyy HH:mm:ss");
       const diffInMinutes = DateTime.now().setZone("Europe/Rome").diff(dt, "minutes").as("minutes");
@@ -169,7 +162,6 @@ const Dashboard = () => {
     return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
   }, [data, isLoading, parameters]);
 
-  // === Stato complessivo (verde/giallo/rosso) ===
   const hasErrors = errorCount > 0;
   const hasWarnings = warnings.length > 0;
 
@@ -253,11 +245,8 @@ const Dashboard = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* SFONDO: griglia + bagliori radiali in layer assoluto */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        {/* base gradient scuro */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0b1220] via-[#0f1a2d] to-[#0b1220]" />
-        {/* bagliori radiali colorati */}
         <div
           className="absolute inset-0"
           style={{
@@ -265,14 +254,12 @@ const Dashboard = () => {
               "radial-gradient(circle at 20% 10%, rgba(59,130,246,0.12), transparent 35%), radial-gradient(circle at 80% 5%, rgba(16,185,129,0.10), transparent 30%), radial-gradient(circle at 60% 80%, rgba(234,179,8,0.08), transparent 35%)",
           }}
         />
-        {/* GRIGLIA sottile */}
         <div
           className="absolute inset-0 opacity-[0.08]"
           style={{
             backgroundImage:
               "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)",
             backgroundSize: "40px 40px",
-            // fade top/bottom per non disturbare header e footer
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)",
             maskImage:
@@ -282,13 +269,11 @@ const Dashboard = () => {
       </div>
 
       <div className="h-full flex flex-col">
-        {/* Top bar */}
         <div className="flex justify-between px-5 py-3">
           <div className="flex gap-5 items-center leading-none">
             <img src="IOTALAB_Logo_RGB.png" className="p-2 h-[80px]" />
             <h1 className="text-white text-2xl font-bold">Selezione Rifiuti Urbani</h1>
 
-            {/* Badge STATO (verde/giallo/rosso) con GLOW */}
             <h1
               className={`h-[30px] ${statusStyles[systemStatus].wrap} rounded-full px-2 text-lg flex font-semibold items-center truncate`}
             >
@@ -296,7 +281,6 @@ const Dashboard = () => {
               Stato:<span className="ml-1">{statusStyles[systemStatus].label}</span>
             </h1>
 
-            {/* Badge STATO COMUNICAZIONE (opzionale) */}
             <h1
               className={`h-[30px] ${
                 hasWarnings
@@ -320,9 +304,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Content area */}
         <div className="flex min-h-0 flex-1">
-          {/* Left sidebar */}
           <div className="w-[350px] px-3 flex flex-col justify-between">
             <div className="bg-gray-900/80 rounded-xl p-3 flex flex-col gap-4 border border-white/10">
               <h1 className="text-white text-lg font-semibold">Stato del Sistema</h1>
@@ -395,12 +377,10 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {/* Center panel */}
           <div className="h-screen flex-1 min-w-0">
             {!isLoading && <InteractivePanel sensorData={data?.data ?? []} />}
           </div>
 
-          {/* Right sidebar: scroll unico */}
           <div className="h-screen w-[350px] px-3 flex flex-col">
             <div className="flex flex-col gap-4 flex-1 overflow-y-auto scrollbar-elegant">
               <Section title="Errori del Sistema" count={erroriAttendibili.length}>
