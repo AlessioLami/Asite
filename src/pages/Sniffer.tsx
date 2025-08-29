@@ -2,7 +2,6 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { useGetSnifferQuery } from '../services/apis/snifferApi';
 import { DateTime } from 'luxon';
 import { Calendar } from '../components/ui/calendar';
-import type { DateRange } from 'react-day-picker';
 import { useState } from 'react';
 
 type DateRange = {
