@@ -9,7 +9,6 @@ import {
   Bounds,
   useBounds,
 } from "@react-three/drei";
-import Pavimento from "./Pavimento";
 import Macchinario from "./Macchinario";
 
 function FitAndPushOnce({
@@ -115,7 +114,6 @@ const InteractivePanel = ( sensorData:any) => {
 
         <Bounds clip margin={0.85}>
           <group ref={plantRef}>
-            <Pavimento />
             <Macchinario sensorData={sensorData} />
           </group>
 

@@ -7,7 +7,6 @@ import {
   Environment,
   ContactShadows,
 } from "@react-three/drei";
-import Pavimento from "../components/threejs/Pavimento";
 import { Canvas } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { FaArrowLeft, FaCircle } from "react-icons/fa";
@@ -273,7 +272,6 @@ const ConveyorInfo = () => {
         )}
 
         <primitive object={scene} castShadow receiveShadow />
-        <Pavimento />
 
         <OrbitControls
           ref={controlsRef as any}

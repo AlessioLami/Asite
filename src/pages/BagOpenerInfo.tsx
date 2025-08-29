@@ -7,7 +7,6 @@ import {
   ContactShadows,
 } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import Pavimento from "../components/threejs/Pavimento";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
@@ -91,7 +90,6 @@ const BagOpenerInfo = () => {
         <ContactShadows opacity={0.35} scale={80} blur={2.6} far={25} position={[0, -0.001, 0]} />
 
         <primitive object={scene} castShadow receiveShadow />
-        <Pavimento />
 
         <OrbitControls
           ref={controlsRef as any}
