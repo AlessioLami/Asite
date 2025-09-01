@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from "react"
-import { FiArrowLeft, FiPlus } from "react-icons/fi"
+import React, { useState, useEffect, useRef } from "react"
+import { FiArrowLeft, FiPlus, FiX, FiCheck } from "react-icons/fi"
 import { FaClipboardList, FaDatabase } from "react-icons/fa"
 import { FaWeightScale } from "react-icons/fa6"
 import { MdSensors, MdUpdate } from "react-icons/md"
@@ -31,6 +31,44 @@ export type Unita = {
   codifica: string;
   tempLimit: number;
 }
+
+// ————————————————————————————————
+// Absolute-positioned Confirm Popover (no deps)
+// ————————————————————————————————
+interface ConfirmPopoverProps {
+  open: boolean
+  prevLabel: string
+  newLabel: string
+  onCancel: () => void
+  onConfirm: () => void
+}
+
+const ConfirmPopover = React.forwardRef<HTMLDivElement, ConfirmPopoverProps>(
+  ({ open, prevLabel, newLabel, onCancel, onConfirm }, ref) => {
+    if (!open) return null
+    return (
+      <div ref={ref as any} className="absolute z-[999] right-0 top-12 w-80 rounded-xl border border-white/10 bg-slate-900/95 p-4 shadow-2xl">
+        {/* little arrow */}
+        <div className="absolute -top-2 right-10 w-4 h-4 rotate-45 bg-slate-900/95 border-l border-t border-white/10" />
+        <div className="text-sm text-white/80">
+          <p className="font-semibold mb-2">Confermi l'aggiornamento dei parametri?</p>
+          <p>Stai aggiornando <span className="font-semibold">maxDispoUpdateTime</span>.</p>
+          <div className="mt-2 space-x-1 text-white/90">
+            <span>Da</span>
+            <span className="font-mono px-2 py-1 rounded-md bg-white/5 border border-white/10 inline-block">{prevLabel}</span>
+            <span>a</span>
+            <span className="font-mono px-2 py-1 rounded-md bg-white/5 border border-white/10 inline-block">{newLabel}</span>
+          </div>
+        </div>
+        <div className="mt-4 flex justify-end gap-2">
+          <button onClick={onCancel} className="px-3 h-9 rounded-lg border border-white/10 hover:bg-white/5 transition flex items-center gap-2"><FiX/> Annulla</button>
+          <button onClick={onConfirm} className="px-3 h-9 rounded-lg bg-blue-500/90 hover:bg-blue-500 text-white font-semibold transition flex items-center gap-2"><FiCheck/> Aggiorna</button>
+        </div>
+      </div>
+    )
+  }
+)
+ConfirmPopover.displayName = "ConfirmPopover"
 
 const Settings = () => {
   const [section, setSection] = useState<"whitelist"|"dispositivi"|"unita"|"parametri">("whitelist")
@@ -234,8 +272,6 @@ const Settings = () => {
   }, [paramsLoading, paramsError, parameters])
 
   const pad2 = (n: number) => n.toString().padStart(2, "0")
-
-  // helper per label HH:MM:SS
   const msToLabel = (ms: number) => {
     const h = Math.floor(ms / 3600000)
     const m = Math.floor((ms % 3600000) / 60000)
@@ -251,6 +287,34 @@ const Settings = () => {
   const hh = Math.floor(totalMs / 3600000)
   const mm = Math.floor((totalMs % 3600000) / 60000)
   const ss = Math.floor((totalMs % 60000) / 1000)
+
+  // ——— Confirm state (popover) for parameters update
+  type ConfirmPayload = { paramId: string; keySetting: string; newMs: number; prevMs: number }
+  const [confirmParams, setConfirmParams] = useState<ConfirmPayload | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const popoverRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (!confirmOpen) return
+      const target = e.target as Node
+      if (popoverRef.current && !popoverRef.current.contains(target)) {
+        setConfirmOpen(false)
+        setConfirmParams(null)
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [confirmOpen])
+
+  const openConfirmParams = (payload: ConfirmPayload) => {
+    setConfirmParams(payload)
+    setConfirmOpen(true)
+  }
+  const closeConfirmParams = () => {
+    setConfirmOpen(false)
+    setConfirmParams(null)
+  }
 
   const handleUpdateMaxTime = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -281,24 +345,21 @@ const Settings = () => {
         return
       }
 
-      // Conferma prima di aggiornare
-      const prevLabel = msToLabel(param.numberValue ?? 0)
-      const newLabel  = msToLabel(ms)
-      const confirmed = window.confirm(
-        `Confermi l'aggiornamento del tempo massimo di aggiornamento dispositivo?\n` +
-        `Da ${prevLabel} a ${newLabel}.`
-      )
-      if (!confirmed) {
-        toast("Aggiornamento annullato.")
-        return
-      }
+      // Open absolute-positioned popover next to the button
+      openConfirmParams({ paramId: param._id, keySetting: param.keySetting, newMs: ms, prevMs: param.numberValue ?? 0 })
+    } catch (error) {
+      toast.error("Errore nell'aggiornamento dei parametri.")
+    }
+  }
 
+  const confirmUpdateMaxTime = async () => {
+    if (!confirmParams) return
+    try {
       const res = await updateParameters({
-        _id: param._id,
-        keySetting: param.keySetting,
-        numberValue: ms
+        _id: confirmParams.paramId,
+        keySetting: confirmParams.keySetting,
+        numberValue: confirmParams.newMs
       } as any)
-
       // @ts-ignore
       if (res.error && "data" in res.error && (res.error.data as any)?.message) {
         // @ts-ignore
@@ -306,6 +367,7 @@ const Settings = () => {
       } else {
         toast.success("Parametri aggiornati con successo!")
         await refetchParams()
+        closeConfirmParams()
       }
     } catch (error) {
       toast.error("Errore nell'aggiornamento dei parametri.")
@@ -338,7 +400,6 @@ const Settings = () => {
           >
             <FiArrowLeft/> Panoramica
           </a>
-          <h1 className='text-3xl font-extrabold tracking-tight'>IMPOSTAZIONI</h1>
         </div>
 
         <div className="flex flex-col gap-2 font-semibold text-base w-full">
@@ -617,13 +678,23 @@ const Settings = () => {
                   Totale: <span className="font-semibold text-white">{totalMs.toLocaleString()} ms</span> ({pad2(hh)}:{pad2(mm)}:{pad2(ss)})
                 </div>
 
-                <div className="flex gap-2">
+                {/* Button + Absolute Popover wrapper */}
+                <div className="relative flex gap-2">
                   <button
                     type="submit"
                     className="px-4 bg-blue-500/90 hover:bg-blue-500 rounded-xl flex justify-center items-center gap-2 text-white font-semibold transition"
                   >
                     <MdUpdate/> Aggiorna
                   </button>
+
+                  <ConfirmPopover
+                    ref={popoverRef}
+                    open={confirmOpen}
+                    prevLabel={msToLabel(confirmParams?.prevMs ?? 0)}
+                    newLabel={msToLabel(confirmParams?.newMs ?? 0)}
+                    onCancel={closeConfirmParams}
+                    onConfirm={confirmUpdateMaxTime}
+                  />
                 </div>
               </form>
             </>
