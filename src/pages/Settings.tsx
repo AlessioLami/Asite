@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from "react"
 import { FiArrowLeft, FiPlus } from "react-icons/fi"
 import { FaClipboardList, FaDatabase } from "react-icons/fa"
@@ -22,7 +24,7 @@ export type Dispo = {
   codifica: string;
   unita_misurata: any;
   type: string;
-} 
+}
 
 export type Unita = {
   _id: string;
@@ -33,7 +35,7 @@ export type Unita = {
 const Settings = () => {
   const [section, setSection] = useState<"whitelist"|"dispositivi"|"unita"|"parametri">("whitelist")
 
-  const [add] = useAddWhitelistedUserMutation() 
+  const [add] = useAddWhitelistedUserMutation()
   const [addDispo] = useAddDispoMutation()
   const [addUnita] = useAddUnitaMutation()
 
@@ -69,7 +71,7 @@ const Settings = () => {
 
   const [codificaUnita, setCodificaUnita] = useState("")
 
-  let whitelist = whitelistData ?? []    
+  let whitelist = whitelistData ?? []
   if(whitelistError && "status" in whitelistError){
     whitelist = whitelistError.status === 400 ? [] : whitelistData ?? []
   }
@@ -79,7 +81,7 @@ const Settings = () => {
     // @ts-ignore
     dispoList = dispoError.status === 400 ? [] : dispoData.data ?? []
   }
-  
+
   let unitaList = unitaData?.data ?? []
   if(unitaError && "status" in unitaError){
     // @ts-ignore
@@ -233,6 +235,14 @@ const Settings = () => {
 
   const pad2 = (n: number) => n.toString().padStart(2, "0")
 
+  // helper per label HH:MM:SS
+  const msToLabel = (ms: number) => {
+    const h = Math.floor(ms / 3600000)
+    const m = Math.floor((ms % 3600000) / 60000)
+    const s = Math.floor((ms % 60000) / 1000)
+    return `${pad2(h)}:${pad2(m)}:${pad2(s)}`
+  }
+
   const totalMs =
     (Number(maxH || 0) * 3600000) +
     (Number(maxM || 0) * 60000) +
@@ -242,53 +252,65 @@ const Settings = () => {
   const mm = Math.floor((totalMs % 3600000) / 60000)
   const ss = Math.floor((totalMs % 60000) / 1000)
 
- const handleUpdateMaxTime = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault()
-  try {
-    const h = Number(maxH || 0)
-    const m = Number(maxM || 0)
-    const s = Number(maxS || 0)
+  const handleUpdateMaxTime = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    try {
+      const h = Number(maxH || 0)
+      const m = Number(maxM || 0)
+      const s = Number(maxS || 0)
 
-    const isInt = (v: number) => Number.isInteger(v) && v >= 0
-    if (![h, m, s].every(isInt)) {
-      toast.error("Inserisci numeri interi validi (>= 0).")
-      return
-    }
-    if (m > 59 || s > 59) {
-      toast.error("Minuti e secondi devono essere tra 0 e 59.")
-      return
-    }
+      const isInt = (v: number) => Number.isInteger(v) && v >= 0
+      if (![h, m, s].every(isInt)) {
+        toast.error("Inserisci numeri interi validi (>= 0).")
+        return
+      }
+      if (m > 59 || s > 59) {
+        toast.error("Minuti e secondi devono essere tra 0 e 59.")
+        return
+      }
 
-    const ms = (h * 3600000) + (m * 60000) + (s * 1000)
-    if (ms <= 0) {
-      toast.error("Il tempo totale deve essere maggiore di 0.")
-      return
-    }
+      const ms = (h * 3600000) + (m * 60000) + (s * 1000)
+      if (ms <= 0) {
+        toast.error("Il tempo totale deve essere maggiore di 0.")
+        return
+      }
 
-    const param = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")
-    if (!param) {
-      toast.error("Parametro non trovato.")
-      return
-    }
+      const param = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")
+      if (!param) {
+        toast.error("Parametro non trovato.")
+        return
+      }
 
-    const res = await updateParameters({
-      _id: param._id,
-      keySetting: param.keySetting,
-      numberValue: ms
-    } as any)
+      // Conferma prima di aggiornare
+      const prevLabel = msToLabel(param.numberValue ?? 0)
+      const newLabel  = msToLabel(ms)
+      const confirmed = window.confirm(
+        `Confermi l'aggiornamento del tempo massimo di aggiornamento dispositivo?\n` +
+        `Da ${prevLabel} a ${newLabel}.`
+      )
+      if (!confirmed) {
+        toast("Aggiornamento annullato.")
+        return
+      }
 
-    // @ts-ignore
-    if (res.error && "data" in res.error && (res.error.data as any)?.message) {
+      const res = await updateParameters({
+        _id: param._id,
+        keySetting: param.keySetting,
+        numberValue: ms
+      } as any)
+
       // @ts-ignore
-      toast.error((res.error.data as any).message)
-    } else {
-      toast.success("Parametri aggiornati con successo!")
-      await refetchParams()
+      if (res.error && "data" in res.error && (res.error.data as any)?.message) {
+        // @ts-ignore
+        toast.error((res.error.data as any).message)
+      } else {
+        toast.success("Parametri aggiornati con successo!")
+        await refetchParams()
+      }
+    } catch (error) {
+      toast.error("Errore nell'aggiornamento dei parametri.")
     }
-  } catch (error) {
-    toast.error("Errore nell'aggiornamento dei parametri.")
   }
-} 
 
   return(
     <div
@@ -306,7 +328,7 @@ const Settings = () => {
       }}
     >
       <Toaster position="top-center" richColors/>
-      
+
       <div className="flex flex-col gap-10 p-10 border-r border-white/10 bg-white/5 backdrop-blur min-w-[280px]">
         <div className="flex flex-col gap-3">
           <a
@@ -357,7 +379,7 @@ const Settings = () => {
             <FaDatabase/> Parametri
           </h1>
         </div>
-      </div> 
+      </div>
 
       {section == "whitelist" && (
         <div className="p-10 flex flex-col gap-4 w-full">
@@ -602,7 +624,7 @@ const Settings = () => {
                   >
                     <MdUpdate/> Aggiorna
                   </button>
-                </div> 
+                </div>
               </form>
             </>
           )}
