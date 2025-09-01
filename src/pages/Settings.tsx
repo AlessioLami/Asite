@@ -32,9 +32,6 @@ export type Unita = {
   tempLimit: number;
 }
 
-// ————————————————————————————————
-// Absolute-positioned Confirm Popover (no deps)
-// ————————————————————————————————
 interface ConfirmPopoverProps {
   open: boolean
   prevLabel: string
@@ -48,7 +45,6 @@ const ConfirmPopover = React.forwardRef<HTMLDivElement, ConfirmPopoverProps>(
     if (!open) return null
     return (
       <div ref={ref as any} className="absolute z-[999] right-0 top-12 w-80 rounded-xl border border-white/10 bg-slate-900/95 p-4 shadow-2xl">
-        {/* little arrow */}
         <div className="absolute -top-2 right-10 w-4 h-4 rotate-45 bg-slate-900/95 border-l border-t border-white/10" />
         <div className="text-sm text-white/80">
           <p className="font-semibold mb-2">Confermi l'aggiornamento dei parametri?</p>
@@ -288,7 +284,6 @@ const Settings = () => {
   const mm = Math.floor((totalMs % 3600000) / 60000)
   const ss = Math.floor((totalMs % 60000) / 1000)
 
-  // ——— Confirm state (popover) for parameters update
   type ConfirmPayload = { paramId: string; keySetting: string; newMs: number; prevMs: number }
   const [confirmParams, setConfirmParams] = useState<ConfirmPayload | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -345,7 +340,6 @@ const Settings = () => {
         return
       }
 
-      // Open absolute-positioned popover next to the button
       openConfirmParams({ paramId: param._id, keySetting: param.keySetting, newMs: ms, prevMs: param.numberValue ?? 0 })
     } catch (error) {
       toast.error("Errore nell'aggiornamento dei parametri.")
@@ -678,7 +672,6 @@ const Settings = () => {
                   Totale: <span className="font-semibold text-white">{totalMs.toLocaleString()} ms</span> ({pad2(hh)}:{pad2(mm)}:{pad2(ss)})
                 </div>
 
-                {/* Button + Absolute Popover wrapper */}
                 <div className="relative flex gap-2">
                   <button
                     type="submit"
