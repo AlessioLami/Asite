@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect } from "react"
 import { FiArrowLeft, FiPlus, FiX, FiCheck } from "react-icons/fi"
 import { FaClipboardList, FaDatabase } from "react-icons/fa"
 import { FaWeightScale } from "react-icons/fa6"
@@ -32,39 +32,57 @@ export type Unita = {
   tempLimit: number;
 }
 
-interface ConfirmPopoverProps {
+
+interface ModalProps {
   open: boolean
-  prevLabel: string
-  newLabel: string
+  title: string
+  children?: React.ReactNode
   onCancel: () => void
   onConfirm: () => void
+  confirmLabel?: string
+  cancelLabel?: string
 }
 
-const ConfirmPopover = React.forwardRef<HTMLDivElement, ConfirmPopoverProps>(
-  ({ open, prevLabel, newLabel, onCancel, onConfirm }, ref) => {
-    if (!open) return null
-    return (
-      <div ref={ref as any} className="absolute z-[999] right-0 top-12 w-80 rounded-xl border border-white/10 bg-slate-900/95 p-4 shadow-2xl">
-        <div className="absolute -top-2 right-10 w-4 h-4 rotate-45 bg-slate-900/95 border-l border-t border-white/10" />
-        <div className="text-sm text-white/80">
-          <p className="font-semibold mb-2">Confermi l'aggiornamento dei parametri?</p>
-          <p>Stai aggiornando <span className="font-semibold">maxDispoUpdateTime</span>.</p>
-          <div className="mt-2 space-x-1 text-white/90">
-            <span>Da</span>
-            <span className="font-mono px-2 py-1 rounded-md bg-white/5 border border-white/10 inline-block">{prevLabel}</span>
-            <span>a</span>
-            <span className="font-mono px-2 py-1 rounded-md bg-white/5 border border-white/10 inline-block">{newLabel}</span>
+const Modal: React.FC<ModalProps> = ({ open, title, children, onCancel, onConfirm, confirmLabel = "Conferma", cancelLabel = "Annulla" }) => {
+  useEffect(() => {
+    if (!open) return
+    const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
+    document.addEventListener('keydown', onEsc)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onEsc)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [open, onCancel])
+
+  if (!open) return null
+  return (
+    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[9999]">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/95 p-5 shadow-2xl">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xl font-semibold">{title}</h2>
+            <button onClick={onCancel} className="p-2 rounded-lg hover:bg-white/10 transition" aria-label="Chiudi">
+              <FiX />
+            </button>
+          </div>
+          <div className="text-white/80 text-sm leading-relaxed">{children}</div>
+          <div className="mt-5 flex justify-end gap-2">
+            <button onClick={onCancel} className="px-4 h-10 rounded-xl border border-white/10 hover:bg-white/5 transition flex items-center gap-2">
+              <FiX /> {cancelLabel}
+            </button>
+            <button onClick={onConfirm} className="px-4 h-10 rounded-xl bg-blue-500/90 hover:bg-blue-500 text-white font-semibold transition flex items-center gap-2">
+              <FiCheck /> {confirmLabel}
+            </button>
           </div>
         </div>
-        <div className="mt-4 flex justify-end gap-2">
-          <button onClick={onCancel} className="px-3 h-9 rounded-lg border border-white/10 hover:bg-white/5 transition flex items-center gap-2"><FiX/> Annulla</button>
-          <button onClick={onConfirm} className="px-3 h-9 rounded-lg bg-blue-500/90 hover:bg-blue-500 text-white font-semibold transition flex items-center gap-2"><FiCheck/> Aggiorna</button>
-        </div>
       </div>
-    )
-  }
-)
-ConfirmPopover.displayName = "ConfirmPopover"
+    </div>
+  )
+}
 
 const Settings = () => {
   const [section, setSection] = useState<"whitelist"|"dispositivi"|"unita"|"parametri">("whitelist")
@@ -287,20 +305,6 @@ const Settings = () => {
   type ConfirmPayload = { paramId: string; keySetting: string; newMs: number; prevMs: number }
   const [confirmParams, setConfirmParams] = useState<ConfirmPayload | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const popoverRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const onClickOutside = (e: MouseEvent) => {
-      if (!confirmOpen) return
-      const target = e.target as Node
-      if (popoverRef.current && !popoverRef.current.contains(target)) {
-        setConfirmOpen(false)
-        setConfirmParams(null)
-      }
-    }
-    document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [confirmOpen])
 
   const openConfirmParams = (payload: ConfirmPayload) => {
     setConfirmParams(payload)
@@ -394,6 +398,7 @@ const Settings = () => {
           >
             <FiArrowLeft/> Panoramica
           </a>
+          <h1 className='text-3xl font-extrabold tracking-tight'>IMPOSTAZIONI</h1>
         </div>
 
         <div className="flex flex-col gap-2 font-semibold text-base w-full">
@@ -672,28 +677,40 @@ const Settings = () => {
                   Totale: <span className="font-semibold text-white">{totalMs.toLocaleString()} ms</span> ({pad2(hh)}:{pad2(mm)}:{pad2(ss)})
                 </div>
 
-                <div className="relative flex gap-2">
+                <div className="flex gap-2">
                   <button
                     type="submit"
                     className="px-4 bg-blue-500/90 hover:bg-blue-500 rounded-xl flex justify-center items-center gap-2 text-white font-semibold transition"
                   >
                     <MdUpdate/> Aggiorna
                   </button>
-
-                  <ConfirmPopover
-                    ref={popoverRef}
-                    open={confirmOpen}
-                    prevLabel={msToLabel(confirmParams?.prevMs ?? 0)}
-                    newLabel={msToLabel(confirmParams?.newMs ?? 0)}
-                    onCancel={closeConfirmParams}
-                    onConfirm={confirmUpdateMaxTime}
-                  />
                 </div>
               </form>
             </>
           )}
         </div>
       )}
+
+      <Modal
+        open={confirmOpen}
+        title="Confermi l'aggiornamento dei parametri?"
+        onCancel={closeConfirmParams}
+        onConfirm={confirmUpdateMaxTime}
+        confirmLabel="Aggiorna"
+      >
+        {confirmParams && (
+          <div className="space-y-2">
+            <p>Stai aggiornando <span className="font-semibold">maxDispoUpdateTime</span>.</p>
+            <div className="text-sm text-white/80">
+              Da
+              <span className="mx-1 font-mono px-2 py-1 rounded-md bg-white/5 border border-white/10">{msToLabel(confirmParams.prevMs)}</span>
+              a
+              <span className="mx-1 font-mono px-2 py-1 rounded-md bg-white/5 border border-white/10">{msToLabel(confirmParams.newMs)}</span>
+            </div>
+            <p className="text-xs text-white/60">Premi ESC o clicca fuori per annullare.</p>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
