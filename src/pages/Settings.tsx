@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { FiArrowLeft, FiPlus, FiX, FiCheck } from "react-icons/fi"
-import { FaClipboardList, FaDatabase } from "react-icons/fa"
+import { FaBell, FaClipboardList, FaDatabase } from "react-icons/fa"
 import { FaWeightScale } from "react-icons/fa6"
 import { MdSensors, MdUpdate } from "react-icons/md"
 import { useAddWhitelistedUserMutation, useGetWhitelistedUsersQuery, useRemoveWhitelistedUserMutation } from "../services/apis/whitelistApi"
@@ -85,7 +85,7 @@ const Modal: React.FC<ModalProps> = ({ open, title, children, onCancel, onConfir
 }
 
 const Settings = () => {
-  const [section, setSection] = useState<"whitelist"|"dispositivi"|"unita"|"parametri">("whitelist")
+  const [section, setSection] = useState<"whitelist"|"dispositivi"|"unita"|"parametri" | "notifiche">("whitelist")
 
   const [add] = useAddWhitelistedUserMutation()
   const [addDispo] = useAddDispoMutation()
@@ -430,6 +430,15 @@ const Settings = () => {
             <FaWeightScale/> Unità
           </h1>
           <h1
+            onClick={() => setSection("notifiche")}
+            className={`cursor-pointer px-3 py-2 rounded-lg flex items-center gap-2 border transition
+              ${section==="notifiche"
+                ? "bg-white/10 text-white border-white/20"
+                : "text-white/60 hover:text-white border-transparent hover:bg-white/5"}`}
+          >
+            <FaBell/> Notifiche
+          </h1>
+          <h1
             onClick={() => setSection("parametri")}
             className={`cursor-pointer px-3 py-2 rounded-lg flex items-center gap-2 border transition
               ${section==="parametri"
@@ -690,6 +699,11 @@ const Settings = () => {
           )}
         </div>
       )}
+
+      { section === "notifiche" && <div>
+
+      </div>
+      }
 
       <Modal
         open={confirmOpen}
