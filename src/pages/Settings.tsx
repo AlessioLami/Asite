@@ -123,6 +123,141 @@ const Settings = () => {
 
   const [codificaUnita, setCodificaUnita] = useState("")
 
+  type Channel = { email: boolean; push: boolean }
+  type ThresholdRule = { id: string; metric: string; operator: ">" | "<" | ">=" | "<="; value: number; enabled: boolean; channels: Channel }
+  type DeviceRule = { offline: { enabled: boolean; afterMs: number; channels: Channel }; thresholds: ThresholdRule[] }
+  type NotificationsConfig = { global: { defaultChannels: Channel; adminEmails: string[]; dailySummary: boolean }; byDevice: Record<string, DeviceRule> }
+  const randId = () => Math.random().toString(36).slice(2, 10)
+
+  const [notifConfig, setNotifConfig] = useState<NotificationsConfig | null>(null)
+const [notifParamId, setNotifParamId] = useState<string | null>(null)
+const NOTIF_KEY = 'notificationsConfig'
+
+const getMaxUpdateMs = () => {
+  const ms: number = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 3600000
+  return ms > 0 ? ms : 3600000
+}
+
+const buildDefaultConfig = (): NotificationsConfig => {
+  const afterMs = getMaxUpdateMs()
+  const byDevice: Record<string, DeviceRule> = {}
+ ;(dispoList || []).forEach((d: Dispo) => {
+    const th: ThresholdRule[] = []
+    if ((d as any)?.unita_misurata?.tempLimit != null) {
+      th.push({ id: randId(), metric: 'temperatura', operator: '>', value: Number((d as any).unita_misurata.tempLimit) || 0, enabled: true, channels: { email: true, push: true } })
+    }
+    byDevice[d._id] = { offline: { enabled: false, afterMs, channels: { email: true, push: true } }, thresholds: th }
+  })
+  return { global: { defaultChannels: { email: true, push: true }, adminEmails: [], dailySummary: false }, byDevice }
+}
+
+useEffect(() => {
+  if (notifConfig) return
+  if (paramsLoading) return
+  try {
+    const paramsArr: any[] = ((paramsData as any)?.data ?? paramsData) || []
+    const param = paramsArr.find?.((p: any) => p.keySetting === NOTIF_KEY)
+    if (param?.stringValue) {
+      setNotifConfig(JSON.parse(param.stringValue))
+      setNotifParamId(param._id)
+      return
+    }
+  } catch {}
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(NOTIF_KEY) : null
+    if (raw) { setNotifConfig(JSON.parse(raw)); return }
+  } catch {}
+  setNotifConfig(buildDefaultConfig())
+}, [paramsLoading, paramsData, dispoData, notifConfig])
+
+
+const saveNotifications = async () => {
+  if (!notifConfig) return
+  if (notifParamId) {
+    const res: any = await updateParameters({ _id: notifParamId, keySetting: NOTIF_KEY, stringValue: JSON.stringify(notifConfig) } as any)
+    if (res.error && "data" in res.error && (res.error.data as any)?.message) toast.error((res.error.data as any).message)
+    else { toast.success('Notifiche salvate!'); await refetchParams() }
+  } else {
+    try { localStorage.setItem(NOTIF_KEY, JSON.stringify(notifConfig)); toast.success('Configurazione salvata nel browser (localStorage).') } catch { toast.error('Impossibile salvare nel browser.') }
+  }
+}
+
+const resetNotifications = () => { setNotifConfig(buildDefaultConfig()); toast.message('Ripristinate le impostazioni predefinite. Ricorda di salvare.') }
+const loadFromLocal = () => { try { const raw = localStorage.getItem(NOTIF_KEY); if (!raw) return toast.info('Nessuna configurazione locale trovata.'); setNotifConfig(JSON.parse(raw)); toast.success('Configurazione caricata dal browser.') } catch { toast.error('Impossibile caricare dal browser.') } }
+
+const setGlobalChannel = (key: keyof Channel, value: boolean) => {
+  if (!notifConfig) return
+  setNotifConfig({ ...notifConfig, global: { ...notifConfig.global, defaultChannels: { ...notifConfig.global.defaultChannels, [key]: value } } })
+}
+const addAdminEmail = (email: string) => {
+  if (!notifConfig || !email.trim()) return
+  if (notifConfig.global.adminEmails.includes(email.trim())) return
+  setNotifConfig({ ...notifConfig, global: { ...notifConfig.global, adminEmails: [...notifConfig.global.adminEmails, email.trim()] } })
+}
+const removeAdminEmail = (email: string) => {
+  if (!notifConfig) return
+  setNotifConfig({ ...notifConfig, global: { ...notifConfig.global, adminEmails: notifConfig.global.adminEmails.filter(e => e !== email) } })
+}
+const setDailySummary = (value: boolean) => {
+  if (!notifConfig) return
+  setNotifConfig({ ...notifConfig, global: { ...notifConfig.global, dailySummary: value } })
+}
+
+const [adminInput, setAdminInput] = useState("")
+const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
+
+const getDeviceRule = (id: string): DeviceRule | null => {
+  if (!notifConfig) return null
+  const existing = notifConfig.byDevice[id]
+  if (existing) return existing
+  const afterMs = getMaxUpdateMs()
+  return { offline: { enabled: false, afterMs, channels: { email: true, push: true } }, thresholds: [] }
+}
+const updateDeviceRule = (id: string, patch: Partial<DeviceRule>) => {
+  if (!notifConfig) return
+  const prev = getDeviceRule(id)!
+  setNotifConfig({ ...notifConfig, byDevice: { ...notifConfig.byDevice, [id]: { ...prev, ...patch } } })
+}
+const setOffline = (id: string, enabled: boolean) => {
+  const prev = getDeviceRule(id); if (!prev) return
+  updateDeviceRule(id, { offline: { ...prev.offline, enabled } })
+}
+const setOfflineAfter = (id: string, afterMs: number) => {
+  const prev = getDeviceRule(id); if (!prev) return
+  updateDeviceRule(id, { offline: { ...prev.offline, afterMs } })
+}
+const setOfflineChannel = (id: string, key: keyof Channel, value: boolean) => {
+  const prev = getDeviceRule(id); if (!prev) return
+  updateDeviceRule(id, { offline: { ...prev.offline, channels: { ...prev.offline.channels, [key]: value } } })
+}
+
+const addThreshold = (id: string) => {
+  const prev = getDeviceRule(id); if (!prev) return
+  const newRule: ThresholdRule = { id: randId(), metric: 'temperatura', operator: '>', value: 0, enabled: true, channels: { email: true, push: true } }
+  const next = [...prev.thresholds, newRule]
+  updateDeviceRule(id, { thresholds: next })
+}
+
+const updateThreshold = (
+  id: string,
+  ruleId: string,
+  patch: Partial<Omit<ThresholdRule, 'operator'>> & { operator?: ThresholdRule['operator'] }
+) => {
+  const prev = getDeviceRule(id); if (!prev) return
+  const next: ThresholdRule[] = prev.thresholds.map((r) => (r.id === ruleId ? ({ ...r, ...patch } as ThresholdRule) : r))
+  updateDeviceRule(id, { thresholds: next })
+}
+
+const removeThreshold = (id: string, ruleId: string) => {
+  const prev = getDeviceRule(id); if (!prev) return
+  const next = prev.thresholds.filter(r => r.id !== ruleId)
+  updateDeviceRule(id, { thresholds: next })
+}
+
+
+
+
+
   let whitelist = whitelistData ?? []
   if(whitelistError && "status" in whitelistError){
     whitelist = whitelistError.status === 400 ? [] : whitelistData ?? []
@@ -486,12 +621,12 @@ const Settings = () => {
                 </tr>
               </thead>
               <tbody>
-                {whitelist.length > 0 ? whitelist.map((user: User, id: number) => {
+                {whitelist.length > 0 ?  whitelist.map((user: User, id: number) => {
                   return(
                     <tr key={id} className="odd:bg-white/[0.02] even:bg-transparent hover:bg-white/[0.06] transition">
                       <td className="py-2 px-4 text-center">{user.email}</td>
                       <td className="py-2 px-4 text-center">{user.role}</td>
-                      <td className="py-2 px-4 text-center">{user.isRegistered ? "Sì" : "No"}</td>
+                      <td className="py-2 px-4 text-center">{user.isRegistered ?"Sì" : "No"}</td>
                       <td className="py-2 px-4 text-center">
                         <button
                           onClick={(e: React.MouseEvent<HTMLButtonElement>) => {handleRemoveUser(e, user._id)}}
@@ -700,10 +835,254 @@ const Settings = () => {
         </div>
       )}
 
-      { section === "notifiche" && <div>
+      {section === "notifiche" && (
+  <div className="p-10 flex flex-col gap-6 w-full">
+    <h1 className="text-4xl font-bold flex items-center gap-2"><FaBell/> NOTIFICHE</h1>
 
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+      <h2 className="text-xl font-semibold mb-3">Globali</h2>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="flex items-center gap-3">
+          <input
+            id="global-email"
+            type="checkbox"
+            className="h-5 w-5"
+            checked={!!notifConfig?.global.defaultChannels.email}
+            onChange={(e) => setGlobalChannel('email', e.target.checked)}
+          />
+          <label htmlFor="global-email">Email attive di default</label>
+        </div>
+        <div className="flex items-center gap-3">
+          <input
+            id="global-push"
+            type="checkbox"
+            className="h-5 w-5"
+            checked={!!notifConfig?.global.defaultChannels.push}
+            onChange={(e) => setGlobalChannel('push', e.target.checked)}
+          />
+          <label htmlFor="global-push">Push attive di default</label>
+        </div>
+        <div className="flex items-center gap-3">
+          <input
+            id="daily-summary"
+            type="checkbox"
+            className="h-5 w-5"
+            checked={!!notifConfig?.global.dailySummary}
+            onChange={(e) => setDailySummary(e.target.checked)}
+          />
+          <label htmlFor="daily-summary">Riepilogo giornaliero</label>
+        </div>
       </div>
-      }
+
+      <div className="mt-4">
+        <label className="text-sm text-white/70">Email amministratori</label>
+        <div className="flex gap-2 mt-2">
+          <input
+            value={adminInput}
+            onChange={(e) => setAdminInput(e.target.value)}
+            placeholder="es. admin@acme.com"
+            className="p-2 rounded-lg w-full bg-white/5 border border-white/10 placeholder-white/60 focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => { addAdminEmail(adminInput); setAdminInput("") }}
+            className="px-4 bg-emerald-500/90 hover:bg-emerald-500 rounded-xl text-white font-semibold"
+          >
+            Aggiungi
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-3">
+          {notifConfig?.global.adminEmails.map((e) => (
+            <span key={e} className="px-2 py-1 rounded-xl bg-white/10 border border-white/10 flex items-center gap-2">
+              <span>{e}</span>
+              <button onClick={() => removeAdminEmail(e)} className="hover:text-red-300"><FiX/></button>
+            </span>
+          ))}
+          {notifConfig && notifConfig.global.adminEmails.length === 0 && (
+            <span className="text-white/60">Nessuna email impostata.</span>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+      <h2 className="text-xl font-semibold mb-3">Per Dispositivo</h2>
+      <div className="flex gap-3 items-center mb-4">
+        <select
+          value={selectedDeviceId ?? ''}
+          onChange={(e) => setSelectedDeviceId(e.target.value)}
+          className="p-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none min-w-[260px]"
+        >
+          <option value="" disabled>Seleziona un dispositivo</option>
+          {dispoList.map((d: Dispo) => (
+            <option key={d._id} value={d._id}>{d.codifica}</option>
+          ))}
+        </select>
+      </div>
+
+      {selectedDeviceId ? (
+        (() => {
+          const rule = getDeviceRule(selectedDeviceId!)
+          if (!rule) return null
+          return (
+            <div className="space-y-6">
+              <div className="border border-white/10 rounded-xl p-4">
+                <h3 className="font-semibold text-lg mb-3">Dispositivo offline</h3>
+                <div className="grid sm:grid-cols-3 gap-3 items-center">
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5"
+                      checked={rule.offline.enabled}
+                      onChange={(e) => setOffline(selectedDeviceId!, e.target.checked)}
+                    />
+                    <span>Abilita</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-white/70">Dopo</span>
+                    <input
+                      type="number"
+                      min={1000}
+                      step={1000}
+                      value={rule.offline.afterMs}
+                      onChange={(e) => setOfflineAfter(selectedDeviceId!, Math.max(1000, parseInt(e.target.value || '0')))}
+                      className="p-2 rounded-lg bg-white/5 border border-white/10 w-40 focus:outline-none"
+                    />
+                    <span className="text-sm text-white/70">ms</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5"
+                        checked={rule.offline.channels.email}
+                        onChange={(e) => setOfflineChannel(selectedDeviceId!, 'email', e.target.checked)}
+                      />
+                      Email
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5"
+                        checked={rule.offline.channels.push}
+                        onChange={(e) => setOfflineChannel(selectedDeviceId!, 'push', e.target.checked)}
+                      />
+                      Push
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-white/10 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-lg">Soglie</h3>
+                  <button
+                    onClick={() => addThreshold(selectedDeviceId!)}
+                    className="px-3 h-10 rounded-xl bg-emerald-500/90 hover:bg-emerald-500 text-white font-semibold flex items-center gap-2"
+                  >
+                    <FiPlus/> Aggiungi soglia
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[800px] text-left">
+                    <thead className="bg-gray-900/70 border-b border-white/10">
+                      <tr>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Abilitata</th>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Metrica</th>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Operatore</th>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Valore</th>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Email</th>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Push</th>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Azioni</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rule.thresholds.length > 0 ? rule.thresholds.map((r) => (
+                        <tr key={r.id} className="odd:bg-white/[0.02] even:bg-transparent">
+                          <td className="py-2 px-3">
+                            <input
+                              type="checkbox"
+                              className="h-5 w-5"
+                              checked={r.enabled}
+                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { enabled: e.target.checked })}
+                            />
+                          </td>
+                          <td className="py-2 px-3">
+                            <input
+                              value={r.metric}
+                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { metric: e.target.value })}
+                              className="p-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none w-40"
+                            />
+                          </td>
+                          <td className="py-2 px-3">
+                            <select
+                              value={r.operator}
+                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { operator: e.target.value as any })}
+                              className="p-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none"
+                            >
+                              <option value=">">&gt;</option>
+                              <option value=">=">&gt;=</option>
+                              <option value="<">&lt;</option>
+                              <option value="<=">&lt;=</option>
+                            </select>
+                          </td>
+                          <td className="py-2 px-3">
+                            <input
+                              type="number"
+                              value={r.value}
+                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { value: parseFloat(e.target.value) })}
+                              className="p-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none w-32"
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              className="h-5 w-5"
+                              checked={r.channels.email}
+                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { channels: { ...r.channels, email: e.target.checked } })}
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              className="h-5 w-5"
+                              checked={r.channels.push}
+                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { channels: { ...r.channels, push: e.target.checked } })}
+                            />
+                          </td>
+                          <td className="py-2 px-3">
+                            <button
+                              onClick={() => removeThreshold(selectedDeviceId!, r.id)}
+                              className="px-3 h-10 rounded-xl bg-red-500/90 hover:bg-red-500 text-white font-semibold flex items-center gap-2"
+                            >
+                              Rimuovi
+                            </button>
+                          </td>
+                        </tr>
+                      )) : (
+                        <tr><td colSpan={7} className="py-4 text-center text-white/70">Nessuna soglia configurata.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={saveNotifications} className="px-4 bg-blue-500/90 hover:bg-blue-500 rounded-xl text-white font-semibold">Salva</button>
+                <button onClick={resetNotifications} className="px-4 bg-white/10 hover:bg-white/20 rounded-xl text-white">Reset</button>
+                <button onClick={loadFromLocal} className="px-4 bg-white/10 hover:bg-white/20 rounded-xl text-white">Carica da browser</button>
+              </div>
+            </div>
+          )
+        })()
+      ) : (
+        <div className="text-white/70">Seleziona un dispositivo per configurare le regole.</div>
+      )}
+    </div>
+  </div>
+)}
+ 
 
       <Modal
         open={confirmOpen}
