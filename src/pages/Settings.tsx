@@ -14,7 +14,6 @@ import { useDispatch, useSelector } from "react-redux"
 import type { RootState } from "../store"
 import {
   setConfig as setNotifConfigAction,
-  setParamId as setNotifParamIdAction,
   setDailySummary as setDailySummaryAction,
   addAdminEmail as addAdminEmailAction,
   removeAdminEmail as removeAdminEmailAction,
@@ -142,8 +141,7 @@ const Settings = () => {
   const [codificaUnita, setCodificaUnita] = useState("")
 
   const dispatch = useDispatch()
-  const { config: notifConfig, paramId: notifParamId } = useSelector((s: RootState) => s.notifications)
-  const NOTIF_KEY = "notificationsConfig"
+  const { config: notifConfig } = useSelector((s: RootState) => s.notifications)
 
   const randId = () => Math.random().toString(36).slice(2, 10)
   const getMaxUpdateMs = () => {
@@ -218,42 +216,23 @@ const resetNotifications = () => {
 }
 
 
-const saveNotifications = async () => {
+const saveNotifications = () => {
   if (!notifConfig) return
-  const res: any = await updateParameters({
-    _id: notifParamId,
-    keySetting: NOTIF_KEY,
-    stringValue: JSON.stringify(notifConfig)
-  } as any)
-  if (res.error && "data" in res.error && (res.error.data as any)?.message) {
-    toast.error((res.error.data as any).message)
-  } else {
-    toast.success('Notifiche salvate!')
-    await refetchParams()
-  }
+  toast.info('Configurazione pronta per il backend')
+  console.log('notificationsConfig', notifConfig)
 }
 
-const getDeviceRule = (id: string) => (notifConfig ? notifConfig.byDevice[id] ?? null : null)
 
+const getDeviceRule = (id: string) => (notifConfig ? notifConfig.byDevice[id] ?? null : null)
 
 
 useEffect(() => {
   if (notifConfig) return
   if (paramsLoading) return
-  try {
-    const paramsArr: any[] = ((paramsData as any)?.data ?? paramsData) || []
-    const param = paramsArr.find?.((p: any) => p.keySetting === NOTIF_KEY)
-    if (param?.stringValue) {
-      const parsed = JSON.parse(param.stringValue)
-      dispatch(setNotifConfigAction(sanitizeNotifications(parsed)))
-      dispatch(setNotifParamIdAction(param._id))
-      return
-    }
-  } catch {}
   const devices: Dispo[] = Array.isArray((dispoData as any)?.data) ? (dispoData as any).data : []
   dispatch(setNotifConfigAction(buildDefaultConfig(devices)))
-  dispatch(setNotifParamIdAction(null))
 }, [paramsLoading, paramsData, dispoData, notifConfig, dispatch])
+
 
 
 
