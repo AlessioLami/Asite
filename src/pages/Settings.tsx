@@ -840,6 +840,21 @@ useEffect(() => {
           )}
         </div>
     </div>
+
+    <div className="mt-4 flex gap-2">
+  <button
+    onClick={saveNotifications}
+    className="px-4 bg-blue-500/90 hover:bg-blue-500 rounded-xl text-white font-semibold"
+  >
+    Salva
+  </button>
+  <button
+    onClick={resetNotifications}
+    className="px-4 bg-white/10 hover:bg-white/20 rounded-xl text-white"
+  >
+    Reset
+  </button>
+</div>
     </div>
 
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
