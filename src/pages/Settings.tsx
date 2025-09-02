@@ -10,6 +10,24 @@ import { Toaster, toast } from "sonner"
 import { useAddDispoMutation, useGetDispoQuery, useRemoveDispoMutation, useUpdateDispoMutation } from "../services/apis/dispoApi"
 import { useAddUnitaMutation, useGetUnitaQuery, useRemoveUnitaMutation, useUpdateUnitaMutation } from "../services/apis/unitaApi"
 import { useGetParametersQuery, useUpdateMutation } from "../services/apis/parametersApi"
+import { useDispatch, useSelector } from "react-redux"
+import type { RootState } from "../store"
+import {
+  setConfig as setNotifConfigAction,
+  setParamId as setNotifParamIdAction,
+  setDailySummary as setDailySummaryAction,
+  addAdminEmail as addAdminEmailAction,
+  removeAdminEmail as removeAdminEmailAction,
+  setOffline as setOfflineAction,
+  setOfflineAfter as setOfflineAfterAction,
+  addThreshold as addThresholdAction,
+  updateThreshold as updateThresholdAction,
+  removeThreshold as removeThresholdAction,
+  type NotificationsConfig,
+  type DeviceRule,
+  type ThresholdRule,
+} from "../services/slices/notificationSlice"
+
 
 export type User = {
   email: string;
@@ -123,33 +141,101 @@ const Settings = () => {
 
   const [codificaUnita, setCodificaUnita] = useState("")
 
-  type Channel = { email: boolean; push: boolean }
-  type ThresholdRule = { id: string; metric: string; operator: ">" | "<" | ">=" | "<="; value: number; enabled: boolean; channels: Channel }
-  type DeviceRule = { offline: { enabled: boolean; afterMs: number; channels: Channel }; thresholds: ThresholdRule[] }
-  type NotificationsConfig = { global: { defaultChannels: Channel; adminEmails: string[]; dailySummary: boolean }; byDevice: Record<string, DeviceRule> }
+  const dispatch = useDispatch()
+  const { config: notifConfig, paramId: notifParamId } = useSelector((s: RootState) => s.notifications)
+  const NOTIF_KEY = "notificationsConfig"
+
   const randId = () => Math.random().toString(36).slice(2, 10)
+  const getMaxUpdateMs = () => {
+  const arr: any[] = ((paramsData as any)?.data ?? paramsData) || []
+  const ms = arr.find?.((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue
+  return typeof ms === "number" && ms > 0 ? ms : 3600000
+  }
 
-  const [notifConfig, setNotifConfig] = useState<NotificationsConfig | null>(null)
-const [notifParamId, setNotifParamId] = useState<string | null>(null)
-const NOTIF_KEY = 'notificationsConfig'
-
-const getMaxUpdateMs = () => {
-  const ms: number = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 3600000
-  return ms > 0 ? ms : 3600000
-}
-
-const buildDefaultConfig = (): NotificationsConfig => {
+  const buildDefaultConfig = (devices: Dispo[]): NotificationsConfig => {
   const afterMs = getMaxUpdateMs()
   const byDevice: Record<string, DeviceRule> = {}
- ;(dispoList || []).forEach((d: Dispo) => {
+  devices.forEach((d: Dispo) => {
     const th: ThresholdRule[] = []
     if ((d as any)?.unita_misurata?.tempLimit != null) {
-      th.push({ id: randId(), metric: 'temperatura', operator: '>', value: Number((d as any).unita_misurata.tempLimit) || 0, enabled: true, channels: { email: true, push: true } })
+      th.push({ id: randId(), metric: 'temperatura', operator: '>', value: Number((d as any).unita_misurata.tempLimit) || 0, enabled: true })
     }
-    byDevice[d._id] = { offline: { enabled: false, afterMs, channels: { email: true, push: true } }, thresholds: th }
+    byDevice[d._id] = { offline: { enabled: false, afterMs }, thresholds: th }
   })
-  return { global: { defaultChannels: { email: true, push: true }, adminEmails: [], dailySummary: false }, byDevice }
+  return { global: { adminEmails: [], dailySummary: false }, byDevice }
 }
+
+const sanitizeNotifications = (cfg: any): NotificationsConfig => {
+  const global = {
+    adminEmails: Array.isArray(cfg?.global?.adminEmails) ? cfg.global.adminEmails : [],
+    dailySummary: !!cfg?.global?.dailySummary
+  }
+  const byDevice: Record<string, DeviceRule> = {}
+  const src = cfg?.byDevice || {}
+  Object.keys(src).forEach((id) => {
+    const r = src[id] || {}
+    const offline = { enabled: !!r?.offline?.enabled, afterMs: Number(r?.offline?.afterMs || 0) }
+    const thresholds: ThresholdRule[] = Array.isArray(r?.thresholds) ? r.thresholds.map((t: any) => ({
+      id: String(t?.id || randId()),
+      metric: String(t?.metric || ''),
+      operator: (t?.operator === '>' || t?.operator === '>=' || t?.operator === '<' || t?.operator === '<=') ? t.operator : '>',
+      value: Number(t?.value || 0),
+      enabled: !!t?.enabled
+    })) : []
+    byDevice[id] = { offline, thresholds }
+  })
+  return { global, byDevice }
+}
+
+const [adminInput, setAdminInput] = useState("")
+const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
+
+const addAdminEmail = (email: string) => dispatch(addAdminEmailAction(email))
+const removeAdminEmail = (email: string) => dispatch(removeAdminEmailAction(email))
+const setDailySummary = (v: boolean) => dispatch(setDailySummaryAction(v))
+
+const setOffline = (id: string, enabled: boolean) =>
+  dispatch(setOfflineAction({ id, enabled }))
+const setOfflineAfter = (id: string, afterMs: number) =>
+  dispatch(setOfflineAfterAction({ id, afterMs }))
+
+const addThreshold = (id: string) =>
+  dispatch(addThresholdAction({ id, newRule: { id: randId(), metric: 'temperatura', operator: '>', value: 0, enabled: true } }))
+
+const updateThreshold = (
+  id: string,
+  ruleId: string,
+  patch: Partial<Omit<ThresholdRule, 'operator'>> & { operator?: ThresholdRule['operator'] }
+) => dispatch(updateThresholdAction({ id, ruleId, patch }))
+
+const removeThreshold = (id: string, ruleId: string) =>
+  dispatch(removeThresholdAction({ id, ruleId }))
+
+
+const resetNotifications = () => {
+  const devices: Dispo[] = Array.isArray((dispoData as any)?.data) ? (dispoData as any).data : []
+  dispatch(setNotifConfigAction(buildDefaultConfig(devices)))
+}
+
+
+const saveNotifications = async () => {
+  if (!notifConfig) return
+  const res: any = await updateParameters({
+    _id: notifParamId,
+    keySetting: NOTIF_KEY,
+    stringValue: JSON.stringify(notifConfig)
+  } as any)
+  if (res.error && "data" in res.error && (res.error.data as any)?.message) {
+    toast.error((res.error.data as any).message)
+  } else {
+    toast.success('Notifiche salvate!')
+    await refetchParams()
+  }
+}
+
+const getDeviceRule = (id: string) => (notifConfig ? notifConfig.byDevice[id] ?? null : null)
+
+
 
 useEffect(() => {
   if (notifConfig) return
@@ -158,102 +244,16 @@ useEffect(() => {
     const paramsArr: any[] = ((paramsData as any)?.data ?? paramsData) || []
     const param = paramsArr.find?.((p: any) => p.keySetting === NOTIF_KEY)
     if (param?.stringValue) {
-      setNotifConfig(JSON.parse(param.stringValue))
-      setNotifParamId(param._id)
+      const parsed = JSON.parse(param.stringValue)
+      dispatch(setNotifConfigAction(sanitizeNotifications(parsed)))
+      dispatch(setNotifParamIdAction(param._id))
       return
     }
   } catch {}
-  try {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(NOTIF_KEY) : null
-    if (raw) { setNotifConfig(JSON.parse(raw)); return }
-  } catch {}
-  setNotifConfig(buildDefaultConfig())
-}, [paramsLoading, paramsData, dispoData, notifConfig])
-
-
-const saveNotifications = async () => {
-  if (!notifConfig) return
-  if (notifParamId) {
-    const res: any = await updateParameters({ _id: notifParamId, keySetting: NOTIF_KEY, stringValue: JSON.stringify(notifConfig) } as any)
-    if (res.error && "data" in res.error && (res.error.data as any)?.message) toast.error((res.error.data as any).message)
-    else { toast.success('Notifiche salvate!'); await refetchParams() }
-  } else {
-    try { localStorage.setItem(NOTIF_KEY, JSON.stringify(notifConfig)); toast.success('Configurazione salvata nel browser (localStorage).') } catch { toast.error('Impossibile salvare nel browser.') }
-  }
-}
-
-const resetNotifications = () => { setNotifConfig(buildDefaultConfig()); toast.message('Ripristinate le impostazioni predefinite. Ricorda di salvare.') }
-const loadFromLocal = () => { try { const raw = localStorage.getItem(NOTIF_KEY); if (!raw) return toast.info('Nessuna configurazione locale trovata.'); setNotifConfig(JSON.parse(raw)); toast.success('Configurazione caricata dal browser.') } catch { toast.error('Impossibile caricare dal browser.') } }
-
-const setGlobalChannel = (key: keyof Channel, value: boolean) => {
-  if (!notifConfig) return
-  setNotifConfig({ ...notifConfig, global: { ...notifConfig.global, defaultChannels: { ...notifConfig.global.defaultChannels, [key]: value } } })
-}
-const addAdminEmail = (email: string) => {
-  if (!notifConfig || !email.trim()) return
-  if (notifConfig.global.adminEmails.includes(email.trim())) return
-  setNotifConfig({ ...notifConfig, global: { ...notifConfig.global, adminEmails: [...notifConfig.global.adminEmails, email.trim()] } })
-}
-const removeAdminEmail = (email: string) => {
-  if (!notifConfig) return
-  setNotifConfig({ ...notifConfig, global: { ...notifConfig.global, adminEmails: notifConfig.global.adminEmails.filter(e => e !== email) } })
-}
-const setDailySummary = (value: boolean) => {
-  if (!notifConfig) return
-  setNotifConfig({ ...notifConfig, global: { ...notifConfig.global, dailySummary: value } })
-}
-
-const [adminInput, setAdminInput] = useState("")
-const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
-
-const getDeviceRule = (id: string): DeviceRule | null => {
-  if (!notifConfig) return null
-  const existing = notifConfig.byDevice[id]
-  if (existing) return existing
-  const afterMs = getMaxUpdateMs()
-  return { offline: { enabled: false, afterMs, channels: { email: true, push: true } }, thresholds: [] }
-}
-const updateDeviceRule = (id: string, patch: Partial<DeviceRule>) => {
-  if (!notifConfig) return
-  const prev = getDeviceRule(id)!
-  setNotifConfig({ ...notifConfig, byDevice: { ...notifConfig.byDevice, [id]: { ...prev, ...patch } } })
-}
-const setOffline = (id: string, enabled: boolean) => {
-  const prev = getDeviceRule(id); if (!prev) return
-  updateDeviceRule(id, { offline: { ...prev.offline, enabled } })
-}
-const setOfflineAfter = (id: string, afterMs: number) => {
-  const prev = getDeviceRule(id); if (!prev) return
-  updateDeviceRule(id, { offline: { ...prev.offline, afterMs } })
-}
-const setOfflineChannel = (id: string, key: keyof Channel, value: boolean) => {
-  const prev = getDeviceRule(id); if (!prev) return
-  updateDeviceRule(id, { offline: { ...prev.offline, channels: { ...prev.offline.channels, [key]: value } } })
-}
-
-const addThreshold = (id: string) => {
-  const prev = getDeviceRule(id); if (!prev) return
-  const newRule: ThresholdRule = { id: randId(), metric: 'temperatura', operator: '>', value: 0, enabled: true, channels: { email: true, push: true } }
-  const next = [...prev.thresholds, newRule]
-  updateDeviceRule(id, { thresholds: next })
-}
-
-const updateThreshold = (
-  id: string,
-  ruleId: string,
-  patch: Partial<Omit<ThresholdRule, 'operator'>> & { operator?: ThresholdRule['operator'] }
-) => {
-  const prev = getDeviceRule(id); if (!prev) return
-  const next: ThresholdRule[] = prev.thresholds.map((r) => (r.id === ruleId ? ({ ...r, ...patch } as ThresholdRule) : r))
-  updateDeviceRule(id, { thresholds: next })
-}
-
-const removeThreshold = (id: string, ruleId: string) => {
-  const prev = getDeviceRule(id); if (!prev) return
-  const next = prev.thresholds.filter(r => r.id !== ruleId)
-  updateDeviceRule(id, { thresholds: next })
-}
-
+  const devices: Dispo[] = Array.isArray((dispoData as any)?.data) ? (dispoData as any).data : []
+  dispatch(setNotifConfigAction(buildDefaultConfig(devices)))
+  dispatch(setNotifParamIdAction(null))
+}, [paramsLoading, paramsData, dispoData, notifConfig, dispatch])
 
 
 
@@ -621,12 +621,12 @@ const removeThreshold = (id: string, ruleId: string) => {
                 </tr>
               </thead>
               <tbody>
-                {whitelist.length > 0 ?  whitelist.map((user: User, id: number) => {
+                {whitelist.length > 0 ? whitelist.map((user: User, id: number) => {
                   return(
                     <tr key={id} className="odd:bg-white/[0.02] even:bg-transparent hover:bg-white/[0.06] transition">
                       <td className="py-2 px-4 text-center">{user.email}</td>
                       <td className="py-2 px-4 text-center">{user.role}</td>
-                      <td className="py-2 px-4 text-center">{user.isRegistered ?"Sì" : "No"}</td>
+                      <td className="py-2 px-4 text-center">{user.isRegistered ? "Sì" : "No"}</td>
                       <td className="py-2 px-4 text-center">
                         <button
                           onClick={(e: React.MouseEvent<HTMLButtonElement>) => {handleRemoveUser(e, user._id)}}
@@ -835,33 +835,13 @@ const removeThreshold = (id: string, ruleId: string) => {
         </div>
       )}
 
-      {section === "notifiche" && (
+     {section === "notifiche" && (
   <div className="p-10 flex flex-col gap-6 w-full">
     <h1 className="text-4xl font-bold flex items-center gap-2"><FaBell/> NOTIFICHE</h1>
 
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
       <h2 className="text-xl font-semibold mb-3">Globali</h2>
       <div className="grid sm:grid-cols-2 gap-4">
-        <div className="flex items-center gap-3">
-          <input
-            id="global-email"
-            type="checkbox"
-            className="h-5 w-5"
-            checked={!!notifConfig?.global.defaultChannels.email}
-            onChange={(e) => setGlobalChannel('email', e.target.checked)}
-          />
-          <label htmlFor="global-email">Email attive di default</label>
-        </div>
-        <div className="flex items-center gap-3">
-          <input
-            id="global-push"
-            type="checkbox"
-            className="h-5 w-5"
-            checked={!!notifConfig?.global.defaultChannels.push}
-            onChange={(e) => setGlobalChannel('push', e.target.checked)}
-          />
-          <label htmlFor="global-push">Push attive di default</label>
-        </div>
         <div className="flex items-center gap-3">
           <input
             id="daily-summary"
@@ -902,7 +882,7 @@ const removeThreshold = (id: string, ruleId: string) => {
             <span className="text-white/60">Nessuna email impostata.</span>
           )}
         </div>
-      </div>
+    </div>
     </div>
 
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
@@ -923,7 +903,7 @@ const removeThreshold = (id: string, ruleId: string) => {
       {selectedDeviceId ? (
         (() => {
           const rule = getDeviceRule(selectedDeviceId!)
-          if (!rule) return null
+          if (!rule) return <div className="text-white/70">Nessuna regola per questo dispositivo.</div>
           return (
             <div className="space-y-6">
               <div className="border border-white/10 rounded-xl p-4">
@@ -950,26 +930,6 @@ const removeThreshold = (id: string, ruleId: string) => {
                     />
                     <span className="text-sm text-white/70">ms</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5"
-                        checked={rule.offline.channels.email}
-                        onChange={(e) => setOfflineChannel(selectedDeviceId!, 'email', e.target.checked)}
-                      />
-                      Email
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5"
-                        checked={rule.offline.channels.push}
-                        onChange={(e) => setOfflineChannel(selectedDeviceId!, 'push', e.target.checked)}
-                      />
-                      Push
-                    </label>
-                  </div>
                 </div>
               </div>
 
@@ -992,8 +952,6 @@ const removeThreshold = (id: string, ruleId: string) => {
                         <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Metrica</th>
                         <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Operatore</th>
                         <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Valore</th>
-                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Email</th>
-                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Push</th>
                         <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Azioni</th>
                       </tr>
                     </thead>
@@ -1018,7 +976,7 @@ const removeThreshold = (id: string, ruleId: string) => {
                           <td className="py-2 px-3">
                             <select
                               value={r.operator}
-                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { operator: e.target.value as any })}
+                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { operator: e.target.value as ThresholdRule['operator'] })}
                               className="p-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none"
                             >
                               <option value=">">&gt;</option>
@@ -1035,33 +993,17 @@ const removeThreshold = (id: string, ruleId: string) => {
                               className="p-2 rounded-lg bg-white/5 border border-white/10 focus:outline-none w-32"
                             />
                           </td>
-                          <td className="py-2 px-3 text-center">
-                            <input
-                              type="checkbox"
-                              className="h-5 w-5"
-                              checked={r.channels.email}
-                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { channels: { ...r.channels, email: e.target.checked } })}
-                            />
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            <input
-                              type="checkbox"
-                              className="h-5 w-5"
-                              checked={r.channels.push}
-                              onChange={(e) => updateThreshold(selectedDeviceId!, r.id, { channels: { ...r.channels, push: e.target.checked } })}
-                            />
-                          </td>
                           <td className="py-2 px-3">
                             <button
                               onClick={() => removeThreshold(selectedDeviceId!, r.id)}
                               className="px-3 h-10 rounded-xl bg-red-500/90 hover:bg-red-500 text-white font-semibold flex items-center gap-2"
                             >
-                              Rimuovi
+                              Elimina
                             </button>
                           </td>
                         </tr>
                       )) : (
-                        <tr><td colSpan={7} className="py-4 text-center text-white/70">Nessuna soglia configurata.</td></tr>
+                        <tr><td colSpan={5} className="py-4 text-center text-white/70">Nessuna soglia configurata.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -1071,7 +1013,6 @@ const removeThreshold = (id: string, ruleId: string) => {
               <div className="flex gap-2">
                 <button onClick={saveNotifications} className="px-4 bg-blue-500/90 hover:bg-blue-500 rounded-xl text-white font-semibold">Salva</button>
                 <button onClick={resetNotifications} className="px-4 bg-white/10 hover:bg-white/20 rounded-xl text-white">Reset</button>
-                <button onClick={loadFromLocal} className="px-4 bg-white/10 hover:bg-white/20 rounded-xl text-white">Carica da browser</button>
               </div>
             </div>
           )

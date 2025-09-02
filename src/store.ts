@@ -9,6 +9,7 @@ import dispoApi from "./services/apis/dispoApi";
 import unitaApi from "./services/apis/unitaApi";
 import snifferApi from "./services/apis/snifferApi";
 import parametersApi from "./services/apis/parametersApi";
+import notificationsReducer from "./services/slices/notificationSlice"
 
 const persistConfig = {
     key: "auth",
@@ -28,6 +29,7 @@ export const store = configureStore({
         [snifferApi.reducerPath]: snifferApi.reducer,
         [parametersApi.reducerPath]: parametersApi.reducer,
         auth: persistedAuthReducer,
+        notifications: notificationsReducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false
