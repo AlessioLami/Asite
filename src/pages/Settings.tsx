@@ -163,28 +163,6 @@ const Settings = () => {
   return { global: { adminEmails: [], dailySummary: false }, byDevice }
 }
 
-const sanitizeNotifications = (cfg: any): NotificationsConfig => {
-  const global = {
-    adminEmails: Array.isArray(cfg?.global?.adminEmails) ? cfg.global.adminEmails : [],
-    dailySummary: !!cfg?.global?.dailySummary
-  }
-  const byDevice: Record<string, DeviceRule> = {}
-  const src = cfg?.byDevice || {}
-  Object.keys(src).forEach((id) => {
-    const r = src[id] || {}
-    const offline = { enabled: !!r?.offline?.enabled, afterMs: Number(r?.offline?.afterMs || 0) }
-    const thresholds: ThresholdRule[] = Array.isArray(r?.thresholds) ? r.thresholds.map((t: any) => ({
-      id: String(t?.id || randId()),
-      metric: String(t?.metric || ''),
-      operator: (t?.operator === '>' || t?.operator === '>=' || t?.operator === '<' || t?.operator === '<=') ? t.operator : '>',
-      value: Number(t?.value || 0),
-      enabled: !!t?.enabled
-    })) : []
-    byDevice[id] = { offline, thresholds }
-  })
-  return { global, byDevice }
-}
-
 const [adminInput, setAdminInput] = useState("")
 const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null)
 
@@ -815,7 +793,7 @@ useEffect(() => {
       )}
 
      {section === "notifiche" && (
-  <div className="p-10 flex flex-col gap-6 w-full">
+  <div className="p-10 flex flex-col gap-6 w-full h-full min-h-0 overflow-y-auto">
     <h1 className="text-4xl font-bold flex items-center gap-2"><FaBell/> NOTIFICHE</h1>
 
     <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
@@ -928,8 +906,8 @@ useEffect(() => {
                     <thead className="bg-gray-900/70 border-b border-white/10">
                       <tr>
                         <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Abilitata</th>
-                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Metrica</th>
-                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Operatore</th>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Unità</th>
+                        <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Condizione</th>
                         <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Valore</th>
                         <th className="py-2 px-3 text-xs uppercase tracking-wide text-white/80">Azioni</th>
                       </tr>
