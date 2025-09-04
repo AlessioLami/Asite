@@ -200,7 +200,7 @@ const Settings = () => {
       const param = parameters?.find((p: any) => p.keySetting === "lista_email");
 
       if (!param) {
-        toast.error("Parametro 'lista_email' non trovato. Crealo lato backend oppure assicurati che venga restituito dall'API.");
+        toast.error("Parametro 'lista_email' non trovato.");
         setSavingEmails(false);
         return;
       }
@@ -209,7 +209,7 @@ const Settings = () => {
         _id: param._id,
         keySetting: "lista_email",
         arrayValue: emailList,
-        // stringValue: emailList.join(",") // <-- usa questo se il backend memorizza CSV
+        stringValue: emailList.join(",") 
       } as any);
 
       // @ts-ignore
@@ -770,7 +770,6 @@ const Settings = () => {
                 </div>
               </form>
 
-              {/* --- PARAMETRO: LISTA EMAIL --- */}
               <div className="flex flex-col w-full gap-4 bg-white/5 border border-white/10 backdrop-blur rounded-xl p-4">
                 <div className="flex items-center justify-between">
                   <h1 className="font-semibold text-xl">Lista Email</h1>
