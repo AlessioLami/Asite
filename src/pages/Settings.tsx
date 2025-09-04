@@ -71,7 +71,7 @@ const Modal: React.FC<ModalProps> = ({ open, title, children, onCancel, onConfir
           </div>
           <div className="text-white/80 text-sm leading-relaxed">{children}</div>
           <div className="mt-5 flex justify-end gap-2">
-            <button onClick={onCancel} className="px-4 h-10 rounded-xl border border-white/10 hover:bg-white/5 transition flex items-center gap-2">
+            <button onClick={onCancel} className="px-4 h-10 rounded-xl border border-white/10 hover:bg.white/5 transition flex items-center gap-2">
               <FiX /> {cancelLabel}
             </button>
             <button onClick={onConfirm} className="px-4 h-10 rounded-xl bg-blue-500/90 hover:bg-blue-500 text-white font-semibold transition flex items-center gap-2">
@@ -123,10 +123,13 @@ const Settings = () => {
 
   const [codificaUnita, setCodificaUnita] = useState("")
 
+  // --- LISTA EMAIL (PARAMETRO "lista_email") ---
+  const [emailInput, setEmailInput] = useState("");
+  const [emailList, setEmailList] = useState<string[]>([]);
+  const [savingEmails, setSavingEmails] = useState(false);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+
   
-
-
-
   let whitelist = whitelistData ?? []
   if(whitelistError && "status" in whitelistError){
     whitelist = whitelistError.status === 400 ? [] : whitelistData ?? []
@@ -148,6 +151,81 @@ const Settings = () => {
   if (paramsError && "status" in paramsError) {
     parameters = paramsError.status === 400 ? null : (paramsData?.data ?? paramsData ?? null)
   }
+
+  // Carica lista_email quando i parametri sono disponibili
+  useEffect(() => {
+    if (!paramsLoading && !paramsError && parameters) {
+      const p = parameters?.find((x: any) => x.keySetting === "lista_email");
+      if (p) {
+        if (Array.isArray(p.arrayValue)) {
+          setEmailList(p.arrayValue.filter((e: any) => typeof e === "string"));
+        } else if (typeof p.stringValue === "string" && p.stringValue.trim() !== "") {
+          setEmailList(
+            p.stringValue
+              .split(",")
+              .map((s: string) => s.trim())
+              .filter((s: string) => s.length > 0)
+          );
+        } else {
+          setEmailList([]);
+        }
+      } else {
+        setEmailList([]);
+      }
+    }
+  }, [paramsLoading, paramsError, parameters])
+
+  const addEmailToList = () => {
+    const val = emailInput.trim().toLowerCase();
+    if (!val) return;
+    if (!emailRegex.test(val)) {
+      toast.error("Inserisci un'email valida.");
+      return;
+    }
+    if (emailList.includes(val)) {
+      toast.error("Questa email è già in lista.");
+      return;
+    }
+    setEmailList(prev => [...prev, val]);
+    setEmailInput("");
+  };
+
+  const removeEmailFromList = (mail: string) => {
+    setEmailList(prev => prev.filter(e => e !== mail));
+  };
+
+  const saveEmailList = async () => {
+    try {
+      setSavingEmails(true);
+      const param = parameters?.find((p: any) => p.keySetting === "lista_email");
+
+      if (!param) {
+        toast.error("Parametro 'lista_email' non trovato. Crealo lato backend oppure assicurati che venga restituito dall'API.");
+        setSavingEmails(false);
+        return;
+      }
+
+      const res = await updateParameters({
+        _id: param._id,
+        keySetting: "lista_email",
+        arrayValue: emailList,
+        // stringValue: emailList.join(",") // <-- usa questo se il backend memorizza CSV
+      } as any);
+
+      // @ts-ignore
+      if (res.error && "data" in res.error && (res.error.data as any)?.message) {
+        // @ts-ignore
+        toast.error((res.error.data as any).message);
+      } else {
+        toast.success("Lista email aggiornata con successo!");
+        await refetchParams();
+      }
+    } catch (err) {
+      toast.error("Errore nel salvataggio della lista email.");
+    } finally {
+      setSavingEmails(false);
+    }
+  };
 
   const handleAddUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -393,7 +471,7 @@ const Settings = () => {
     >
       <Toaster position="top-center" richColors/>
 
-      <div className="flex flex-col gap-10 p-10 border-r border-white/10 bg-white/5 backdrop-blur min-w-[280px]">
+      <div className="flex flex-col gap-10 p-10 border-r border-white/10 bg.white/5 backdrop-blur min-w-[280px]">
         <div className="flex flex-col gap-3">
           <a
             href="/dashboard"
@@ -593,7 +671,7 @@ const Settings = () => {
             <button type="submit" className="px-4 bg-emerald-500/90 hover:bg-emerald-500 rounded-xl flex justify-center items-center gap-2 text-white font-semibold transition"><FiPlus/> Aggiungi</button>
           </form>
 
-          <form onSubmit={handleUpdateUnita} className="flex w-full gap-2 bg-white/5 border border-white/10 backdrop-blur rounded-xl p-3">
+          <form onSubmit={handleUpdateUnita} className="flex w/full gap-2 bg-white/5 border border-white/10 backdrop-blur rounded-xl p-3">
             <select  onChange={(e) => setUpdatedUnitaId(e.target.value)} className="p-2 rounded-lg w-full bg-white/5 border border-white/10 focus:outline-none">
               {unitaList.length > 0 ? unitaList.map((unita: Unita) => <option key={unita._id} value={unita._id}>{unita.codifica.toUpperCase()}</option>) : "Non ci sono dispositivi registrati."}
             </select>
@@ -606,10 +684,10 @@ const Settings = () => {
             <table className="w-full text-left min-w-[700px]">
               <thead className="bg-gray-900/70 border-b border-white/10 sticky top-0 z-10">
                 <tr>
-                  <th className="py-2 px-4 text-center text-xs font-semibold uppercase tracking-wide text-white/80">ID</th>
-                  <th className="py-2 px-4 text-center text-xs font-semibold uppercase tracking-wide text-white/80">Codifica</th>
-                  <th className="py-2 px-4 text-center text-xs font-semibold uppercase tracking-wide text-white/80">Temperatura Limite</th>
-                  <th className="py-2 px-4 text-center text-xs font-semibold uppercase tracking-wide text-white/80">Azioni</th>
+                  <th className="py-2 px-4 text-center text-xs font-semibold uppercase tracking-wide text.white/80">ID</th>
+                  <th className="py-2 px-4 text-center text-xs font-semibold uppercase tracking-wide text.white/80">Codifica</th>
+                  <th className="py-2 px-4 text-center text-xs font-semibold uppercase tracking-wide text.white/80">Temperatura Limite</th>
+                  <th className="py-2 px-4 text-center text-xs font-semibold uppercase tracking-wide text.white/80">Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -640,6 +718,7 @@ const Settings = () => {
 
           {!paramsLoading && !paramsError && (
             <>
+              {/* --- PARAMETRO: TEMPO MASSIMO --- */}
               <form onSubmit={handleUpdateMaxTime} className="flex flex-col w-full gap-4 bg-white/5 border border-white/10 backdrop-blur rounded-xl p-4">
                 <div className="flex items-center justify-between">
                   <h1 className="font-semibold text-xl">Tempo massimo di aggiornamento dispositivo</h1>
@@ -699,12 +778,80 @@ const Settings = () => {
                   </button>
                 </div>
               </form>
+
+              {/* --- PARAMETRO: LISTA EMAIL --- */}
+              <div className="flex flex-col w-full gap-4 bg-white/5 border border-white/10 backdrop-blur rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <h1 className="font-semibold text-xl">Lista Email</h1>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="Aggiungi email (es. nome@dominio.com)"
+                    className="p-2 rounded-lg w-full bg-white/5 border border-white/10 placeholder-white/60 focus:outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addEmailToList();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={addEmailToList}
+                    className="px-4 bg-emerald-500/90 hover:bg-emerald-500 rounded-xl flex justify-center items-center gap-2 text-white font-semibold transition"
+                    aria-label="Aggiungi email"
+                    title="Aggiungi email"
+                  >
+                    <FiPlus /> Aggiungi
+                  </button>
+                </div>
+
+                {emailList.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {emailList.map((mail) => (
+                      <span
+                        key={mail}
+                        className="inline-flex items-center gap-2 px-3 h-9 rounded-xl bg-white/10 border border-white/10 text-sm"
+                      >
+                        {mail}
+                        <button
+                          type="button"
+                          onClick={() => removeEmailFromList(mail)}
+                          className="p-1 rounded-lg hover:bg-white/10 transition"
+                          aria-label={`Rimuovi ${mail}`}
+                          title={`Rimuovi ${mail}`}
+                        >
+                          <FiX />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-white/60 text-sm">Nessuna email presente.</div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={saveEmailList}
+                    disabled={savingEmails}
+                    className={`px-4 rounded-xl flex justify-center items-center gap-2 text-white font-semibold transition ${
+                      savingEmails ? "bg-blue-500/50 cursor-not-allowed" : "bg-blue-500/90 hover:bg-blue-500"
+                    }`}
+                  >
+                    <MdUpdate /> {savingEmails ? "Salvataggio..." : "Salva lista"}
+                  </button>
+                </div>
+              </div>
             </>
           )}
         </div>
       )}
 
-     
+      
  
 
       <Modal
