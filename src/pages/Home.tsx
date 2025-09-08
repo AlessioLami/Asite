@@ -81,12 +81,12 @@ const Home = () => {
           <Step
             n={1}
             title="Accedi alla dashboard"
-            desc="Premi Entra nella dashboard e autenticati."
+            desc="Entra nella dashboard e autenticati."
           />
           <Step
             n={2}
             title="Naviga la scena 3D"
-            desc="Usa il mouse per muoverti. Clicca su un asset per aprire il pannello info per visualizzare allarmi e stati."
+            desc="Usa il mouse per muoverti. Clicca su una parte del macchinario per aprire il pannello info per visualizzare allarmi e stati."
           />
           <Step
             n={3}
