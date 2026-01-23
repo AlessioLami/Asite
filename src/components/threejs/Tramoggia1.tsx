@@ -3,8 +3,9 @@ import { useRef } from 'react'
 import * as THREE from 'three'
 import type { ErrorProps } from './Macchinario'
 
-const Tramoggia1 = ({hasError}: ErrorProps) => {
-
+const Tramoggia1 = ({hasError, hasWarning}: ErrorProps) => {
+  const status = hasError ? "error" : hasWarning ? "warning" : "ok";
+  const glowColor = status === "error" ? "red" : "#ffb020";
   const { scene } = useGLTF('/models/tramoggia1.glb')
   const glowRef = useRef<THREE.Mesh>(null)
 
@@ -15,18 +16,18 @@ const Tramoggia1 = ({hasError}: ErrorProps) => {
   return(
     <>
         <primitive object={scene}/>
-        {(hasError && (
+        {(status !== "ok" && (
           <group>
             <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[-5, -0.4, -9.3]}>
             <boxGeometry args={[21, 1.5]} />
             <meshBasicMaterial
-              color="red"
+              color={glowColor}
               transparent
               opacity={0.5}
               depthWrite={false}
             />
-          </mesh>  
-          </group> 
+          </mesh>
+          </group>
         ))} 
     </>
   ) 

@@ -7,7 +7,10 @@ import { useFrame } from "@react-three/fiber";
 
 const EDGES_KEY = "_edgesHelper";
 
-const Vaglio = ({ hasError }: ErrorProps) => {
+const Vaglio = ({ hasError, hasWarning }: ErrorProps) => {
+  const status = hasError ? "error" : hasWarning ? "warning" : "ok";
+  const glowColor = status === "error" ? "#ff3b3b" : "#ffb020";
+  const emissiveColor = status === "error" ? 0xff3b3b : 0xffb020;
   const { scene } = useGLTF("/models/vaglio.glb");
   const glowRef = useRef<THREE.Mesh>(null);
   const navigate = useNavigate();
@@ -38,15 +41,15 @@ const Vaglio = ({ hasError }: ErrorProps) => {
       }
       const mat = o.material as THREE.MeshStandardMaterial;
 
-      if (hasError) {
-        mat.emissive.set(0xff3b3b);
+      if (status !== "ok") {
+        mat.emissive.set(emissiveColor);
         mat.emissiveIntensity = 0.3;
       } else {
         mat.emissive.set(0x000000);
         mat.emissiveIntensity = 0;
       }
 
-      if (hasError && !o.userData[EDGES_KEY]) {
+      if (status !== "ok" && !o.userData[EDGES_KEY]) {
         const eg = new THREE.EdgesGeometry(o.geometry, 20);
         const lm = new THREE.LineBasicMaterial({
           color: 0xffffff,
@@ -58,7 +61,7 @@ const Vaglio = ({ hasError }: ErrorProps) => {
         lines.renderOrder = 9999;
         o.add(lines);
         o.userData[EDGES_KEY] = lines;
-      } else if (!hasError && o.userData[EDGES_KEY]) {
+      } else if (status === "ok" && o.userData[EDGES_KEY]) {
         const lines: THREE.LineSegments = o.userData[EDGES_KEY];
         o.remove(lines);
         lines.geometry.dispose();
@@ -69,10 +72,10 @@ const Vaglio = ({ hasError }: ErrorProps) => {
       o.castShadow = true;
       o.receiveShadow = true;
     });
-  }, [scene, hasError]);
+  }, [scene, status, emissiveColor]);
 
   useFrame(() => {
-    if (!hasError || !glowRef.current) return;
+    if (status === "ok" || !glowRef.current) return;
     const m = glowRef.current.material as THREE.MeshBasicMaterial;
     const t = performance.now() * 0.004;
     m.opacity = 0.35 + 0.15 * Math.sin(t);
@@ -82,14 +85,14 @@ const Vaglio = ({ hasError }: ErrorProps) => {
     <>
       <primitive object={scene} onClick={() => navigate("/vaglio")} />
 
-      {hasError && (
+      {status !== "ok" && (
         <>
           <Html position={[center.x, center.y, center.z]} center distanceFactor={30} occlude>
             <div
               style={{
                 padding: "6px 10px",
                 borderRadius: 8,
-                background: "rgba(255,59,59,0.92)",
+                background: status === "error" ? "rgba(255,59,59,0.92)" : "rgba(255,176,32,0.92)",
                 color: "white",
                 fontWeight: 700,
                 fontSize: 12,
@@ -97,14 +100,14 @@ const Vaglio = ({ hasError }: ErrorProps) => {
                 border: "1px solid rgba(255,255,255,0.2)",
               }}
             >
-              VAGLIO ERRORE
+              VAGLIO {status === "error" ? "ERRORE" : "WARNING"}
             </div>
           </Html>
 
           <group>
             <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]} position={[1.15, 0, -5.1]}>
               <boxGeometry args={[6, 3.5, 0.1]} />
-              <meshBasicMaterial color="#ff3b3b" transparent opacity={0.4} depthWrite={false} />
+              <meshBasicMaterial color={glowColor} transparent opacity={0.4} depthWrite={false} />
             </mesh>
           </group>
         </>

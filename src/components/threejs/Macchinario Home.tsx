@@ -12,16 +12,16 @@ import Vaglio from "./Vaglio";
 const HomeMacchinario = () => {
     return(
         <group>
-            <Conveyor hasError={false}/>
-            <Conveyor2 hasError={false}/>
-            <Conveyor3 hasError={false}/>
-            <Conveyor4 hasError={true}/>
-            <Conveyor6 hasError={false}/>
-            <Conveyor7  hasError={false}/>
-            <BagOpener hasError={true}/>
-            <Vaglio hasError={true}/>
-            <Tramoggia1 hasError={false}/>
-            <Tramoggia2 hasError={false}/>
+            <Conveyor hasError={false} hasWarning={false}/>
+            <Conveyor2 hasError={false} hasWarning={false}/>
+            <Conveyor3 hasError={false} hasWarning={false}/>
+            <Conveyor4 hasError={true} hasWarning={false}/>
+            <Conveyor6 hasError={false} hasWarning={false}/>
+            <Conveyor7 hasError={false} hasWarning={false}/>
+            <BagOpener hasError={true} hasWarning={false}/>
+            <Vaglio hasError={true} hasWarning={false}/>
+            <Tramoggia1 hasError={false} hasWarning={false}/>
+            <Tramoggia2 hasError={false} hasWarning={false}/>
         </group>
     )
 }

@@ -378,7 +378,7 @@ const Dashboard = () => {
           </div>
 
           <div className="h-screen flex-1 min-w-0">
-            {!isLoading && <InteractivePanel sensorData={data?.data ?? []} />}
+            {!isLoading && <InteractivePanel sensorData={data?.data ?? []} parameters={parameters} />}
           </div>
 
           <div className="h-screen w-[350px] px-3 flex flex-col">
