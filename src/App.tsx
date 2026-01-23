@@ -31,35 +31,35 @@ const App = () => {
         <Route element={<ProtectedRoute allowedRoles={["admin", "superadmin"]}/>}>
         <Route path="/settings" element={<Settings/>}/>
         </Route>
-        <Route element={<ProtectedRoute allowedRoles={["user, admin", "superadmin"]}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
           <Route path="/conveyor" element={<ConveyorInfo/>}/>
         </Route>
 
-       <Route element={<ProtectedRoute allowedRoles={["user, admin", "superadmin"]}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
           <Route path="/conveyor2" element={<Conveyor2Info/>}/>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["user, admin", "superadmin"]}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
           <Route path="/conveyor3" element={<Conveyor3Info/>}/>
         </Route>
-        
-       <Route element={<ProtectedRoute allowedRoles={["user, admin", "superadmin"]}/>}>
+
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
           <Route path="/conveyor4" element={<Conveyor4Info/>}/>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["user, admin", "superadmin"]}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
           <Route path="/conveyor5" element={<Conveyor5Info/>}/>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["user, admin", "superadmin"]}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
           <Route path="/conveyor6" element={<Conveyor6Info/>}/>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["user, admin", "superadmin"]}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
           <Route path="/conveyor7" element={<Conveyor7Info/>}/>
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["user, admin", "superadmin"]}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "superadmin"]}/>}>
           <Route path="/bagopener" element={<BagOpenerInfo/>}/>
         </Route>
 

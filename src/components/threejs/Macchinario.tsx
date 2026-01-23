@@ -16,12 +16,9 @@ export type ErrorProps = {
 
 
 
-const Macchinario = (sensorData: any) => {
-
-    
-
+const Macchinario = ({ sensorData }: { sensorData: any }) => {
     const hasError = (unita: string) => {
-        return sensorData.sensorData.sensorData.some((s: any) => s.unita_misurata === unita && s.isInTempAlarm === true);
+        return sensorData?.some((s: any) => s.unita_misurata === unita && s.isInTempAlarm === true) ?? false;
     }
 
 

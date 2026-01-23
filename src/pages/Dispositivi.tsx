@@ -38,7 +38,7 @@ const Dispositivi = () => {
     to: today,
   });
 
-  const { data, error, refetch } = useGetLogsQuery({
+  const { data, error, isLoading, refetch } = useGetLogsQuery({
     dateStart: dateRange ? DateTime.fromJSDate(dateRange.from).toISO({ includeOffset: false }) : undefined,
     dateStop: dateRange ? DateTime.fromJSDate(dateRange.to).toISO({ includeOffset: false }) : undefined,
   });
@@ -78,7 +78,7 @@ const Dispositivi = () => {
   ).map((log: any) => ({
     name: DateTime.fromISO(log.ts_registrazione).toFormat("HH:mm"),
     temperature: safeFixedNumber(log?.temp_calc, 0),
-    battery: safeFixedNumber(log?.batt_level ?? log?.batt_leve, 0),
+    battery: safeFixedNumber(log?.batt_level, 0),
   }));
 
   return (
@@ -246,7 +246,13 @@ const Dispositivi = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredLogs?.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="text-center w-full text-xl p-5 font-semibold text-white/70">
+                  Caricamento...
+                </td>
+              </tr>
+            ) : filteredLogs?.length > 0 ? (
               filteredLogs.map((log: any, id: number) => {
                 const formattedDate = DateTime.fromISO(log.ts_registrazione, { zone: 'utc' })
                   .setZone('local')
@@ -270,7 +276,7 @@ const Dispositivi = () => {
                         {log.tempLimit ? "Si" : "No"}
                       </span>
                     </td>
-                    <td className="py-2 px-4 text-center">{safeToFixedStr(log?.batt_leve ?? log?.batt_level, 0)}</td>
+                    <td className="py-2 px-4 text-center">{safeToFixedStr(log?.batt_level, 0)}</td>
                     <td className="py-2 px-4 text-center">{formattedDate}</td>
                   </tr>
                 );

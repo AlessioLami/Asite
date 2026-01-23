@@ -10,7 +10,8 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: "https://asitesens-api.iotalab.app",
-        changeOrigin: true,
+        changeOrigin: false,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api/, "")
       }
     }

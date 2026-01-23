@@ -9,7 +9,7 @@ import { VscSettings } from "react-icons/vsc";
 import { BsCpuFill } from "react-icons/bs";
 import { FiLogOut } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import { logout, setCredentials } from "../services/slices/authSlice.ts";
+import { logout } from "../services/slices/authSlice.ts";
 import { useGetParametersQuery } from "../services/apis/parametersApi.ts";
 import { useCallback, useMemo } from "react";
 
@@ -46,12 +46,11 @@ type WarningItem = {
 const Dashboard = () => {
   const { data: parameters } = useGetParametersQuery({});
   const user = useSelector((state: RootState) => state.auth.user);
-  const role = useSelector((state: RootState) => state.auth.role).toUpperCase();
+  const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleLogout = useCallback(() => {
-    dispatch(setCredentials({ user: null, role: null }));
     dispatch(logout());
   }, [dispatch]);
 
@@ -82,7 +81,7 @@ const Dashboard = () => {
     const ultimo = data.data.reduce((a: any, b: any) =>
       DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b
     );
-    const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione).toLocal().plus({ hours: 2 });
+    const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
     elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "");
     onlineSensorCount = data.data.length;
 
@@ -91,13 +90,14 @@ const Dashboard = () => {
     const dispoWarning = data.data.map((item: any) => {
       const maxDispoUpdateTime =
         parameters?.find((param: any) => param.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
-      const ts_registrazione = DateTime.fromISO(item.ts_registrazione).toLocal().plus({ hours: 2 });
+      const ts_registrazione = DateTime.fromISO(item.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
       const diffInMilliseconds = DateTime.now()
         .setZone("Europe/Rome")
         .diff(ts_registrazione, "milliseconds")
         .as("milliseconds");
       return {
         id: item.mac_dispo,
+        codifica: item.dispo_codifica,
         ts: ts_registrazione,
         warning: diffInMilliseconds > maxDispoUpdateTime,
         delta: diffInMilliseconds,
@@ -121,8 +121,8 @@ const Dashboard = () => {
       })(item.delta);
 
       warnings.push({
-        codifica: item.id,
-        description: `Il dispositivo ${item.id} non comunica da ${humanDelta}`,
+        codifica: item.codifica,
+        description: `Il dispositivo ${item.codifica} non comunica da ${humanDelta}`,
         time: item.ts.setZone("Europe/Rome").toFormat("HH:mm:ss"),
         date: item.ts.setZone("Europe/Rome").toFormat("dd/MM/yyyy"),
       });
@@ -134,7 +134,7 @@ const Dashboard = () => {
     data.data
       .filter((item: any) => item.isInTempAlarm === true)
       .forEach((item: any) => {
-        const ts = DateTime.fromISO(item.ts_registrazione).setZone("Europe/Rome").plus({ hours: 2 });
+        const ts = DateTime.fromISO(item.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
         errorRows.push({
           codifica: item.dispo_codifica,
           description: `Temperatura oltre la soglia di ${(item.temp_calc - item.tempLimit)?.toFixed(1)}°C`,
