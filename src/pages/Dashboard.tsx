@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 import type { RootState } from "../store.ts";
 import { useGetLastQuery } from "../services/apis/logsApi.ts";
+import { useGetUnitaQuery } from "../services/apis/unitaApi.ts";
 import { DateTime } from "luxon";
 import { GoAlertFill } from "react-icons/go";
 import { FaBug, FaCircle, FaClock, FaWifi } from "react-icons/fa";
@@ -45,6 +46,7 @@ type WarningItem = {
 
 const Dashboard = () => {
   const { data: parameters } = useGetParametersQuery({});
+  const { data: unita } = useGetUnitaQuery({});
   const user = useSelector((state: RootState) => state.auth.user);
   const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
 
@@ -378,7 +380,7 @@ const Dashboard = () => {
           </div>
 
           <div className="h-screen flex-1 min-w-0">
-            {!isLoading && <InteractivePanel sensorData={data?.data ?? []} parameters={parameters} />}
+            {!isLoading && <InteractivePanel sensorData={data?.data ?? []} parameters={parameters} unita={unita?.data ?? []} />}
           </div>
 
           <div className="h-screen w-[350px] px-3 flex flex-col">

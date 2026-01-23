@@ -16,15 +16,23 @@ export type ErrorProps = {
     hasWarning: boolean;
 }
 
-const Macchinario = ({ sensorData, parameters }: { sensorData: any; parameters: any }) => {
+const Macchinario = ({ sensorData, parameters, unita }: { sensorData: any; parameters: any; unita: any }) => {
     const maxDispoUpdateTime = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
 
-    const hasError = (unita: string) => {
-        return sensorData?.some((s: any) => s.unita_misurata === unita && s.isInTempAlarm === true) ?? false;
+    const getUnitaId = (codifica: string) => {
+        return unita?.find((u: any) => u.codifica?.toUpperCase() === codifica.toUpperCase())?._id;
     }
 
-    const hasWarning = (unita: string) => {
-        const sensor = sensorData?.find((s: any) => s.unita_misurata === unita);
+    const hasError = (unitaCodifica: string) => {
+        const unitaId = getUnitaId(unitaCodifica);
+        if (!unitaId) return false;
+        return sensorData?.some((s: any) => s.unita_misurata === unitaId && s.isInTempAlarm === true) ?? false;
+    }
+
+    const hasWarning = (unitaCodifica: string) => {
+        const unitaId = getUnitaId(unitaCodifica);
+        if (!unitaId) return false;
+        const sensor = sensorData?.find((s: any) => s.unita_misurata === unitaId);
         if (!sensor) return false;
         const ts = DateTime.fromISO(sensor.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
         const diffMs = DateTime.now().setZone("Europe/Rome").diff(ts, "milliseconds").as("milliseconds");
