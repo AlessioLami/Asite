@@ -19,7 +19,7 @@ type LogItem = {
   temp_calc?: number;
   tempLimit?: number;
   ts_registrazione: string | number | Date;
-  unita_misurata?: "M4" | string;
+  unita_misurata?: "M5" | string;
   isInTempAlarm?: boolean;
 };
 
@@ -54,7 +54,7 @@ const Conveyor3Info = () => {
   );
 
   const conveyorRows = useMemo(
-    () => rows.filter((r) => (r?.unita_misurata ?? "") === "M4"),
+    () => rows.filter((r) => (r?.unita_misurata ?? "") === "M5"),
     [rows]
   );
 
@@ -89,8 +89,8 @@ const Conveyor3Info = () => {
       });
   }, [errorsData]);
 
-  const hasM4 = useMemo(
-    () => errorsData.some((e) => e?.unita_misurata === "M4"),
+  const hasM5 = useMemo(
+    () => errorsData.some((e) => e?.unita_misurata === "M5"),
     [errorsData]
   );
 
@@ -204,7 +204,7 @@ const Conveyor3Info = () => {
         <Environment preset="warehouse" />
         <ContactShadows opacity={0.35} scale={80} blur={2.6} far={25} position={[0, -0.001, 0]} />
 
-        {hasM4 && (
+        {hasM5 && (
           <Html position={[0, 2.5, -5.5]} center>
             <div
               style={{
@@ -224,7 +224,7 @@ const Conveyor3Info = () => {
                 whiteSpace: "nowrap",
               }}
             >
-              M4 ERRORE
+              M5 ERRORE
             </div>
           </Html>
         )}

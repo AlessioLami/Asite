@@ -43,10 +43,10 @@ const Macchinario = ({ sensorData, parameters, unita }: { sensorData: any; param
         <group>
             <Conveyor hasError={hasError("M1") || hasError("M2")} hasWarning={hasWarning("M1") || hasWarning("M2")}/>
             <Conveyor2 hasError={hasError("M3")} hasWarning={hasWarning("M3")}/>
-            <Conveyor3 hasError={hasError("M4")} hasWarning={hasWarning("M4")}/>
+            <Conveyor3 hasError={hasError("M5")} hasWarning={hasWarning("M5")}/>
             <Conveyor4 hasError={hasError("M12")} hasWarning={hasWarning("M12")}/>
             <Conveyor5 hasError={hasError("M13") || hasError("M14")} hasWarning={hasWarning("M13") || hasWarning("M14")}/>
-            <Conveyor6 hasError={hasError("M6")} hasWarning={hasWarning("M6")}/>
+            <Conveyor6 hasError={hasError("M9")} hasWarning={hasWarning("M9")}/>
             <Conveyor7 hasError={hasError("M10") || hasError("M11")} hasWarning={hasWarning("M10") || hasWarning("M11")}/>
             <BagOpener hasError={hasError("lacerasacchi")} hasWarning={hasWarning("lacerasacchi")}/>
             <Vaglio hasError={hasError("M6") || hasError("M7") || hasError("M8")} hasWarning={hasWarning("M6") || hasWarning("M7") || hasWarning("M8")}/>
