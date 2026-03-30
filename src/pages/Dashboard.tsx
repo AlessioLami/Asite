@@ -3,6 +3,7 @@ import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 import type { RootState } from "../store.ts";
 import { useGetLastQuery } from "../services/apis/logsApi.ts";
 import { useGetUnitaQuery } from "../services/apis/unitaApi.ts";
+import { useGetMacchineQuery } from "../services/apis/macchinaApi.ts";
 import { DateTime } from "luxon";
 import { GoAlertFill } from "react-icons/go";
 import { FaBug, FaCircle, FaClock, FaWifi } from "react-icons/fa";
@@ -47,6 +48,7 @@ type WarningItem = {
 const Dashboard = () => {
   const { data: parameters } = useGetParametersQuery({});
   const { data: unita } = useGetUnitaQuery({});
+  const { data: macchine } = useGetMacchineQuery({});
   const user = useSelector((state: RootState) => state.auth.user);
   const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
 
@@ -76,7 +78,7 @@ const Dashboard = () => {
     const erroriNonAttendibili: ErrorItem[] = [];
     const warnings: WarningItem[] = [];
 
-    if (isLoading || !data) {
+    if (isLoading || !data || !Array.isArray(data.data) || data.data.length === 0) {
       return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
     }
 
@@ -380,7 +382,7 @@ const Dashboard = () => {
           </div>
 
           <div className="h-screen flex-1 min-w-0">
-            {!isLoading && <InteractivePanel sensorData={data?.data ?? []} parameters={parameters} unita={unita?.data ?? []} />}
+            {!isLoading && <InteractivePanel sensorData={data?.data ?? []} parameters={parameters} unita={unita?.data ?? []} macchine={macchine?.data ?? []} />}
           </div>
 
           <div className="h-screen w-[350px] px-3 flex flex-col">

@@ -263,7 +263,7 @@ const Dispositivi = () => {
                     <td className="py-2 px-4 text-center">{log.codifica}</td>
                     <td className="py-2 px-4 text-center">{log.id_pacchetto}</td>
                     <td className="py-2 px-4 text-center">
-                      {unita?.data.find((u: any) => u._id === log.unita_misurata)?.codifica.toUpperCase() || "N/A"}
+                      {unita?.data?.find((u: any) => u._id === log.unita_misurata)?.codifica?.toUpperCase() || "N/A"}
                     </td>
                     <td className="py-2 px-4 text-center">{safeToFixedStr(log?.temp_calc, 0)}°C</td>
                     <td className="py-2 px-4 text-center">{log.rssi} dBm</td>

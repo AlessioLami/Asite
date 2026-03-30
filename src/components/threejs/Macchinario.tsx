@@ -11,16 +11,39 @@ import Tramoggia2 from "./Tramoggia2";
 import Vaglio from "./Vaglio";
 import { DateTime } from "luxon";
 
+export type MacchinaData = {
+    _id: string;
+    codifica: string;
+    descrizione: string;
+    tipo: string;
+    unitaMisurate: {
+        _id: string;
+        codifica: string;
+        tipo: string;
+        tempLimit: number;
+        dispositivo?: {
+            _id: string;
+            mac: string;
+            codifica: string;
+        };
+    }[];
+};
+
 export type ErrorProps = {
     hasError: boolean;
     hasWarning: boolean;
+    macchina?: MacchinaData;
 }
 
-const Macchinario = ({ sensorData, parameters, unita }: { sensorData: any; parameters: any; unita: any }) => {
+const Macchinario = ({ sensorData, parameters, unita, macchine }: { sensorData: any; parameters: any; unita: any; macchine: any }) => {
     const maxDispoUpdateTime = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
 
     const getUnitaId = (codifica: string) => {
         return unita?.find((u: any) => u.codifica?.toUpperCase() === codifica.toUpperCase())?._id;
+    }
+
+    const getMacchina = (codifica: string): MacchinaData | undefined => {
+        return macchine?.find((m: MacchinaData) => m.codifica === codifica);
     }
 
     const hasError = (unitaCodifica: string) => {
@@ -41,15 +64,15 @@ const Macchinario = ({ sensorData, parameters, unita }: { sensorData: any; param
 
     return(
         <group>
-            <Conveyor hasError={hasError("M1") || hasError("M2")} hasWarning={hasWarning("M1") || hasWarning("M2")}/>
-            <Conveyor2 hasError={hasError("M3")} hasWarning={hasWarning("M3")}/>
-            <Conveyor3 hasError={hasError("M5")} hasWarning={hasWarning("M5")}/>
-            <Conveyor4 hasError={hasError("M12")} hasWarning={hasWarning("M12")}/>
-            <Conveyor5 hasError={hasError("M13") || hasError("M14")} hasWarning={hasWarning("M13") || hasWarning("M14")}/>
-            <Conveyor6 hasError={hasError("M9")} hasWarning={hasWarning("M9")}/>
-            <Conveyor7 hasError={hasError("M10") || hasError("M11")} hasWarning={hasWarning("M10") || hasWarning("M11")}/>
+            <Conveyor hasError={hasError("M1") || hasError("M2")} hasWarning={hasWarning("M1") || hasWarning("M2")} macchina={getMacchina("rullo-01")}/>
+            <Conveyor2 hasError={hasError("M3")} hasWarning={hasWarning("M3")} macchina={getMacchina("rullo-02")}/>
+            <Conveyor3 hasError={hasError("M5")} hasWarning={hasWarning("M5")} macchina={getMacchina("rullo-03")}/>
+            <Conveyor4 hasError={hasError("M12")} hasWarning={hasWarning("M12")} macchina={getMacchina("rullo-004")}/>
+            <Conveyor5 hasError={hasError("M13") || hasError("M14")} hasWarning={hasWarning("M13") || hasWarning("M14")} macchina={getMacchina("rullo-005")}/>
+            <Conveyor6 hasError={hasError("M9")} hasWarning={hasWarning("M9")} macchina={getMacchina("rullo-006")}/>
+            <Conveyor7 hasError={hasError("M10") || hasError("M11")} hasWarning={hasWarning("M10") || hasWarning("M11")} macchina={getMacchina("rullo-007")}/>
             <BagOpener hasError={hasError("lacerasacchi")} hasWarning={hasWarning("lacerasacchi")}/>
-            <Vaglio hasError={hasError("M6") || hasError("M7") || hasError("M8")} hasWarning={hasWarning("M6") || hasWarning("M7") || hasWarning("M8")}/>
+            <Vaglio hasError={hasError("M6") || hasError("M7") || hasError("M8")} hasWarning={hasWarning("M6") || hasWarning("M7") || hasWarning("M8")} macchina={getMacchina("vaglio-01")}/>
             <Tramoggia1 hasError={false} hasWarning={false}/>
             <Tramoggia2 hasError={false} hasWarning={false}/>
         </group>
