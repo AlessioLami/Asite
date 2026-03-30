@@ -269,11 +269,11 @@ const Dispositivi = () => {
                     <td className="py-2 px-4 text-center">{log.rssi} dBm</td>
                     <td className="py-2 px-4 text-center">
                       <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
-                        log.tempLimit
+                        log.isInTempAlarm
                           ? "bg-red-500/15 text-red-300 ring-1 ring-inset ring-red-500/30"
                           : "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30"
                       }`}>
-                        {log.tempLimit ? "Si" : "No"}
+                        {log.isInTempAlarm ? "Si" : "No"}
                       </span>
                     </td>
                     <td className="py-2 px-4 text-center">{safeToFixedStr(log?.batt_level, 0)}</td>

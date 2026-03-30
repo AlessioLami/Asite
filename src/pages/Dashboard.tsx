@@ -2,7 +2,6 @@ import { useDispatch, useSelector } from "react-redux";
 import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 import type { RootState } from "../store.ts";
 import { useGetLastQuery } from "../services/apis/logsApi.ts";
-import { useGetUnitaQuery } from "../services/apis/unitaApi.ts";
 import { useGetMacchineQuery } from "../services/apis/macchinaApi.ts";
 import { DateTime } from "luxon";
 import { GoAlertFill } from "react-icons/go";
@@ -47,9 +46,13 @@ type WarningItem = {
 
 const Dashboard = () => {
   const { data: parameters } = useGetParametersQuery({});
-  const { data: unita } = useGetUnitaQuery({});
   const { data: macchine } = useGetMacchineQuery({});
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const unita = useMemo(() => {
+    if (!Array.isArray(macchine?.data)) return [];
+    return macchine.data.flatMap((m: any) => m.unitaMisurate || []);
+  }, [macchine]);
   const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
 
   const navigate = useNavigate();
@@ -78,20 +81,21 @@ const Dashboard = () => {
     const erroriNonAttendibili: ErrorItem[] = [];
     const warnings: WarningItem[] = [];
 
-    if (isLoading || !data || !Array.isArray(data.data) || data.data.length === 0) {
+    const logs = data?.data?.latestLogs ?? data?.data;
+    if (isLoading || !data || !Array.isArray(logs) || logs.length === 0) {
       return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
     }
 
-    const ultimo = data.data.reduce((a: any, b: any) =>
+    const ultimo = logs.reduce((a: any, b: any) =>
       DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b
     );
     const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
     elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "");
-    onlineSensorCount = data.data.length;
+    onlineSensorCount = logs.length;
 
-    errorCount = data.data.filter((item: any) => item.isInTempAlarm === true).length;
+    errorCount = logs.filter((item: any) => item.isInTempAlarm === true).length;
 
-    const dispoWarning = data.data.map((item: any) => {
+    const dispoWarning = logs.map((item: any) => {
       const maxDispoUpdateTime =
         parameters?.find((param: any) => param.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
       const ts_registrazione = DateTime.fromISO(item.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
@@ -135,7 +139,7 @@ const Dashboard = () => {
     warnings.sort((a, b) => a.codifica.localeCompare(b.codifica));
 
     const errorRows: ErrorItem[] = [];
-    data.data
+    logs
       .filter((item: any) => item.isInTempAlarm === true)
       .forEach((item: any) => {
         const ts = DateTime.fromISO(item.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
@@ -382,7 +386,7 @@ const Dashboard = () => {
           </div>
 
           <div className="h-screen flex-1 min-w-0">
-            {!isLoading && <InteractivePanel sensorData={data?.data ?? []} parameters={parameters} unita={unita?.data ?? []} macchine={macchine?.data ?? []} />}
+            {!isLoading && <InteractivePanel sensorData={data?.data?.latestLogs ?? data?.data ?? []} parameters={parameters} unita={unita} macchine={macchine?.data ?? []} />}
           </div>
 
           <div className="h-screen w-[350px] px-3 flex flex-col">
