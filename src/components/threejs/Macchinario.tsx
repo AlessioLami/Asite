@@ -36,26 +36,28 @@ export type ErrorProps = {
 }
 
 const Macchinario = ({ sensorData, parameters, unita, macchine }: { sensorData: any; parameters: any; unita: any; macchine: any }) => {
-    const maxDispoUpdateTime = parameters?.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
+    const maxDispoUpdateTime = Array.isArray(parameters) ? (parameters.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0) : 0;
 
     const getUnitaId = (codifica: string) => {
-        return unita?.find((u: any) => u.codifica?.toUpperCase() === codifica.toUpperCase())?._id;
+        if (!Array.isArray(unita)) return undefined;
+        return unita.find((u: any) => u.codifica?.toUpperCase() === codifica.toUpperCase())?._id;
     }
 
     const getMacchina = (codifica: string): MacchinaData | undefined => {
-        return macchine?.find((m: MacchinaData) => m.codifica === codifica);
+        if (!Array.isArray(macchine)) return undefined;
+        return macchine.find((m: MacchinaData) => m.codifica === codifica);
     }
 
     const hasError = (unitaCodifica: string) => {
         const unitaId = getUnitaId(unitaCodifica);
-        if (!unitaId) return false;
-        return sensorData?.some((s: any) => s.unita_misurata === unitaId && s.isInTempAlarm === true) ?? false;
+        if (!unitaId || !Array.isArray(sensorData)) return false;
+        return sensorData.some((s: any) => s.unita_misurata === unitaId && s.isInTempAlarm === true);
     }
 
     const hasWarning = (unitaCodifica: string) => {
         const unitaId = getUnitaId(unitaCodifica);
-        if (!unitaId) return false;
-        const sensor = sensorData?.find((s: any) => s.unita_misurata === unitaId);
+        if (!unitaId || !Array.isArray(sensorData)) return false;
+        const sensor = sensorData.find((s: any) => s.unita_misurata === unitaId);
         if (!sensor) return false;
         const ts = DateTime.fromISO(sensor.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
         const diffMs = DateTime.now().setZone("Europe/Rome").diff(ts, "milliseconds").as("milliseconds");
