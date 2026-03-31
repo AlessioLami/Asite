@@ -5,8 +5,6 @@ import type { ErrorProps } from "./Macchinario";
 import { useNavigate } from "react-router-dom";
 import { useFrame } from "@react-three/fiber";
 
-const EDGES_KEY = "_edgesHelper";
-
 const Conveyor = ({ hasError, hasWarning }: ErrorProps) => {
   const status = hasError ? "error" : hasWarning ? "warning" : "ok";
   const glowColor = status === "error" ? "#ff3b3b" : "#ffb020";
@@ -47,26 +45,6 @@ const Conveyor = ({ hasError, hasWarning }: ErrorProps) => {
       } else {
         mat.emissive.set(0x000000);
         mat.emissiveIntensity = 0;
-      }
-
-      if (status !== "ok" && !o.userData[EDGES_KEY]) {
-        const eg = new THREE.EdgesGeometry(o.geometry, 18);
-        const lm = new THREE.LineBasicMaterial({
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.95,
-          depthTest: false,
-        });
-        const lines = new THREE.LineSegments(eg, lm);
-        lines.renderOrder = 9999;
-        o.add(lines);
-        o.userData[EDGES_KEY] = lines;
-      } else if (status === "ok" && o.userData[EDGES_KEY]) {
-        const lines: THREE.LineSegments = o.userData[EDGES_KEY];
-        o.remove(lines);
-        lines.geometry.dispose();
-        (lines.material as THREE.Material).dispose();
-        o.userData[EDGES_KEY] = undefined;
       }
 
       o.castShadow = true;

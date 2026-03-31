@@ -273,123 +273,130 @@ const Dashboard = () => {
       </div>
 
       <div className="h-full flex flex-col">
-        <div className="flex justify-between px-5 py-3">
-          <div className="flex gap-5 items-center leading-none">
-            <img src="IOTALAB_Logo_RGB.png" className="p-2 h-[80px]" />
-            <h1 className="text-white text-2xl font-bold">Selezione Rifiuti Urbani</h1>
-
-            <h1
-              className={`h-[30px] ${statusStyles[systemStatus].wrap} rounded-full px-2 text-lg flex font-semibold items-center truncate`}
-            >
-              <FaCircle className={`h-4 w-4 mr-1 ${statusStyles[systemStatus].dot}`} />
-              Stato:<span className="ml-1">{statusStyles[systemStatus].label}</span>
+        <header className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 sm:px-4 md:px-5 md:py-3">
+          <div className="flex flex-wrap items-center gap-3 md:gap-5">
+            <img src="IOTALAB_Logo_RGB.png" className="h-12 sm:h-14 md:h-[70px] object-contain" />
+            <h1 className="hidden lg:block text-white text-lg xl:text-2xl font-bold whitespace-nowrap">
+              Selezione Rifiuti Urbani
             </h1>
 
-            <h1
-              className={`h-[30px] ${
-                hasWarnings
-                  ? "bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-500/30 shadow-[0_0_18px] shadow-red-500/20"
-                  : "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_18px] shadow-emerald-500/20"
-              } rounded-full px-2 text-lg flex font-semibold items-center truncate`}
-            >
-              <FaWifi className={`h-4 w-4 mr-1 ${hasWarnings ? "text-red-300" : "text-emerald-300"}`} />
-              Stato Comunicazione:<span className="ml-1">{hasWarnings ? "KO" : "OK"}</span>
-            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`h-7 md:h-[30px] ${statusStyles[systemStatus].wrap} rounded-full px-2 text-sm md:text-base flex font-semibold items-center`}
+              >
+                <FaCircle className={`h-3 w-3 md:h-4 md:w-4 mr-1 ${statusStyles[systemStatus].dot}`} />
+                <span className="hidden sm:inline">Stato:</span>
+                <span className="ml-1">{statusStyles[systemStatus].label}</span>
+              </span>
+
+              <span
+                className={`h-7 md:h-[30px] ${
+                  hasWarnings
+                    ? "bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-500/30 shadow-[0_0_18px] shadow-red-500/20"
+                    : "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_18px] shadow-emerald-500/20"
+                } rounded-full px-2 text-sm md:text-base flex font-semibold items-center`}
+              >
+                <FaWifi className={`h-3 w-3 md:h-4 md:w-4 mr-1 ${hasWarnings ? "text-red-300" : "text-emerald-300"}`} />
+                <span className="hidden md:inline">Comunicazione:</span>
+                <span className="ml-1">{hasWarnings ? "KO" : "OK"}</span>
+              </span>
+            </div>
           </div>
 
           <div className="flex gap-2 items-center">
-            <h1 className="rounded-full p-3 bg-blue-500/30 w-8 h-8 text-white font-semibold flex items-center justify-center border border-blue-400/30">
-              WI
-            </h1>
-            <div className="flex flex-col">
-              <h1 className="text-white">{user}</h1>
-              <p className="text-gray-300">{role}</p>
+            <div className="rounded-full bg-blue-500/30 w-8 h-8 text-white font-semibold flex items-center justify-center border border-blue-400/30 text-sm">
+              {user?.slice(0, 2).toUpperCase() ?? "??"}
+            </div>
+            <div className="hidden sm:flex flex-col">
+              <span className="text-white text-sm">{user}</span>
+              <span className="text-gray-300 text-xs">{role}</span>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="flex min-h-0 flex-1">
-          <div className="w-[350px] px-3 flex flex-col justify-between">
-            <div className="bg-gray-900/80 rounded-xl p-3 flex flex-col gap-4 border border-white/10">
-              <h1 className="text-white text-lg font-semibold">Stato del Sistema</h1>
-              <h1 className="flex text-lg items-center text-white font-semibold">
-                <GoAlertFill className={`h-4 mr-2 ${statusStyles[systemStatus].dot}`} />
-                Stato
-                <span
-                  className={`ml-auto ${statusStyles[systemStatus].wrap} px-2 rounded-md font-semibold`}
-                >
-                  {statusStyles[systemStatus].label}
-                </span>
-              </h1>
-              <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaBug className="h-4 mr-2 text-yellow-300" />
-                Errori
-                <span
-                  className={`ml-auto ${
-                    errorCount > 0
-                      ? "bg-yellow-400/10 text-yellow-300 ring-1 ring-yellow-400/30"
-                      : "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30"
-                  } px-2 rounded-md font-semibold`}
-                >
-                  {errorCount}
-                </span>
-              </h1>
-              <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaWifi className="h-4 mr-2 text-emerald-300" />
-                Dispositivi
-                <span className="ml-auto bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30 px-2 rounded-md font-semibold">
-                  {onlineSensorCount}
-                </span>
-              </h1>
-              <h1 className="flex text-lg items-center text-white font-semibold">
-                <FaClock className="h-4 mr-2 text-blue-300" />
-                Ultimo update
-                <span className="ml-auto px-2 rounded-md font-semibold text-sm">{elapsedTime}</span>
-              </h1>
+        <div className="flex flex-col lg:flex-row min-h-0 flex-1 overflow-hidden">
+          <aside className="w-full lg:w-[280px] xl:w-[320px] 2xl:w-[350px] px-3 py-2 lg:py-0 flex-shrink-0 overflow-y-auto lg:overflow-visible">
+            <div className="bg-gray-900/80 rounded-xl p-3 flex flex-col gap-3 border border-white/10">
+              <h2 className="text-white text-base lg:text-lg font-semibold">Stato del Sistema</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:gap-3">
+                <div className="flex text-sm lg:text-base items-center text-white font-semibold">
+                  <GoAlertFill className={`h-4 mr-2 flex-shrink-0 ${statusStyles[systemStatus].dot}`} />
+                  <span>Stato</span>
+                  <span className={`ml-auto ${statusStyles[systemStatus].wrap} px-2 rounded-md font-semibold text-sm`}>
+                    {statusStyles[systemStatus].label}
+                  </span>
+                </div>
+                <div className="flex text-sm lg:text-base items-center text-white font-semibold">
+                  <FaBug className="h-4 mr-2 flex-shrink-0 text-yellow-300" />
+                  <span>Errori</span>
+                  <span
+                    className={`ml-auto ${
+                      errorCount > 0
+                        ? "bg-yellow-400/10 text-yellow-300 ring-1 ring-yellow-400/30"
+                        : "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30"
+                    } px-2 rounded-md font-semibold text-sm`}
+                  >
+                    {errorCount}
+                  </span>
+                </div>
+                <div className="flex text-sm lg:text-base items-center text-white font-semibold">
+                  <FaWifi className="h-4 mr-2 flex-shrink-0 text-emerald-300" />
+                  <span>Dispositivi</span>
+                  <span className="ml-auto bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30 px-2 rounded-md font-semibold text-sm">
+                    {onlineSensorCount}
+                  </span>
+                </div>
+                <div className="flex text-sm lg:text-base items-center text-white font-semibold">
+                  <FaClock className="h-4 mr-2 flex-shrink-0 text-blue-300" />
+                  <span className="hidden sm:inline">Ultimo update</span>
+                  <span className="sm:hidden">Update</span>
+                  <span className="ml-auto px-2 rounded-md font-semibold text-xs lg:text-sm">{elapsedTime}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3 mt-6">
+            <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 mt-3">
               <button
                 onClick={() => navigate("/dispositivi")}
-                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900/80 border border-white/10 w-full rounded-xl p-3 transition"
+                className="flex items-center justify-center lg:justify-start hover:bg-gray-900/70 text-sm lg:text-lg font-bold text-white bg-gray-900/80 border border-white/10 rounded-xl p-2 lg:p-3 transition"
               >
-                <BsCpuFill className="mr-2" />
-                Log Dispositivi
+                <BsCpuFill className="lg:mr-2" />
+                <span className="hidden lg:inline">Log Dispositivi</span>
               </button>
               <button
                 onClick={() => navigate("/sniffer")}
-                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900/80 border border-white/10 w-full rounded-xl p-3 transition"
+                className="flex items-center justify-center lg:justify-start hover:bg-gray-900/70 text-sm lg:text-lg font-bold text-white bg-gray-900/80 border border-white/10 rounded-xl p-2 lg:p-3 transition"
               >
-                <FaWifi className="mr-2" />
-                Sniffer
+                <FaWifi className="lg:mr-2" />
+                <span className="hidden lg:inline">Sniffer</span>
               </button>
               <button
                 onClick={() => navigate("/settings")}
-                className="flex items-center hover:bg-gray-900/70 text-xl font-bold text-white bg-gray-900/80 border border-white/10 w-full rounded-xl p-3 transition"
+                className="flex items-center justify-center lg:justify-start hover:bg-gray-900/70 text-sm lg:text-lg font-bold text-white bg-gray-900/80 border border-white/10 rounded-xl p-2 lg:p-3 transition"
               >
-                <VscSettings className="mr-2" />
-                Impostazioni
+                <VscSettings className="lg:mr-2" />
+                <span className="hidden lg:inline">Impostazioni</span>
               </button>
             </div>
 
             <button
               onClick={handleLogout}
-              className="mt-4 flex items-center text-xl font-bold hover:bg-blue-600/10 text-blue-300 bg-blue-500/10 border border-blue-400/30 w-full rounded-xl p-3 transition"
+              className="hidden lg:flex mt-3 items-center text-lg font-bold hover:bg-blue-600/10 text-blue-300 bg-blue-500/10 border border-blue-400/30 w-full rounded-xl p-3 transition"
             >
               <FiLogOut className="mr-2" />
               Logout
             </button>
-          </div>
+          </aside>
 
-          <div className="h-screen flex-1 min-w-0">
+          <main className="flex-1 min-w-0 min-h-[300px] lg:min-h-0">
             {!isLoading && <InteractivePanel sensorData={data?.data?.latestLogs ?? data?.data ?? []} parameters={parameters} macchine={macchine?.data ?? []} />}
-          </div>
+          </main>
 
-          <div className="h-screen w-[350px] px-3 flex flex-col">
-            <div className="flex flex-col gap-4 flex-1 overflow-y-auto scrollbar-elegant">
+          <aside className="w-full lg:w-[280px] xl:w-[320px] 2xl:w-[350px] px-3 py-2 lg:py-0 flex-shrink-0 max-h-[40vh] lg:max-h-none lg:h-auto overflow-y-auto scrollbar-elegant">
+            <div className="flex flex-col gap-3">
               <Section title="Errori del Sistema" count={erroriAttendibili.length}>
                 {erroriAttendibili.length > 0 ? (
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-2">
                     {erroriAttendibili.map((error) => (
                       <ErrorCard key={error.codifica} variant="danger" item={error} />
                     ))}
@@ -401,19 +408,19 @@ const Dashboard = () => {
 
               <Section title="Errori non attendibili" count={erroriNonAttendibili.length}>
                 {erroriNonAttendibili.length > 0 ? (
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-2">
                     {erroriNonAttendibili.map((error) => (
                       <ErrorCard key={error.codifica} variant="warn" item={error} />
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-300 text-sm">Nessun errore non attendibile nel sistema.</p>
+                  <p className="text-gray-300 text-sm">Nessun errore non attendibile.</p>
                 )}
               </Section>
 
               <Section title="Warnings" count={warnings.length}>
                 {warnings.length > 0 ? (
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-2">
                     {warnings.map((warning) => (
                       <ErrorCard key={warning.codifica} variant="notice" item={warning} />
                     ))}
@@ -423,7 +430,7 @@ const Dashboard = () => {
                 )}
               </Section>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
     </div>

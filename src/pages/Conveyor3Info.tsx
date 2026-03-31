@@ -49,7 +49,10 @@ const Conveyor3Info = () => {
   );
 
   const rows: LogItem[] = useMemo(
-    () => (Array.isArray(data?.data) ? (data!.data as LogItem[]) : []),
+    () => {
+      const logs = data?.data?.latestLogs ?? data?.data;
+      return Array.isArray(logs) ? (logs as LogItem[]) : [];
+    },
     [data]
   );
 
