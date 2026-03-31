@@ -49,11 +49,7 @@ const Dashboard = () => {
   const { data: macchine } = useGetMacchineQuery({});
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const unita = useMemo(() => {
-    if (!Array.isArray(macchine?.data)) return [];
-    return macchine.data.flatMap((m: any) => m.unitaMisurate || []);
-  }, [macchine]);
-  const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
+    const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -386,7 +382,7 @@ const Dashboard = () => {
           </div>
 
           <div className="h-screen flex-1 min-w-0">
-            {!isLoading && <InteractivePanel sensorData={data?.data?.latestLogs ?? data?.data ?? []} parameters={parameters} unita={unita} macchine={macchine?.data ?? []} />}
+            {!isLoading && <InteractivePanel sensorData={data?.data?.latestLogs ?? data?.data ?? []} parameters={parameters} macchine={macchine?.data ?? []} />}
           </div>
 
           <div className="h-screen w-[350px] px-3 flex flex-col">

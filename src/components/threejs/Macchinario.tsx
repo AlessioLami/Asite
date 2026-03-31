@@ -35,13 +35,8 @@ export type ErrorProps = {
     macchina?: MacchinaData;
 }
 
-const Macchinario = ({ sensorData, parameters, unita, macchine }: { sensorData: any; parameters: any; unita: any; macchine: any }) => {
+const Macchinario = ({ sensorData, parameters, macchine }: { sensorData: any; parameters: any; macchine: any }) => {
     const maxDispoUpdateTime = Array.isArray(parameters) ? (parameters.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0) : 0;
-
-    const getUnitaId = (codifica: string) => {
-        if (!Array.isArray(unita)) return undefined;
-        return unita.find((u: any) => u.codifica?.toUpperCase() === codifica.toUpperCase())?._id;
-    }
 
     const getMacchina = (codifica: string): MacchinaData | undefined => {
         if (!Array.isArray(macchine)) return undefined;
@@ -49,15 +44,13 @@ const Macchinario = ({ sensorData, parameters, unita, macchine }: { sensorData: 
     }
 
     const hasError = (unitaCodifica: string) => {
-        const unitaId = getUnitaId(unitaCodifica);
-        if (!unitaId || !Array.isArray(sensorData)) return false;
-        return sensorData.some((s: any) => s.unita_misurata === unitaId && s.isInTempAlarm === true);
+        if (!Array.isArray(sensorData)) return false;
+        return sensorData.some((s: any) => s.unita_misurata?.toUpperCase() === unitaCodifica.toUpperCase() && s.isInTempAlarm === true);
     }
 
     const hasWarning = (unitaCodifica: string) => {
-        const unitaId = getUnitaId(unitaCodifica);
-        if (!unitaId || !Array.isArray(sensorData)) return false;
-        const sensor = sensorData.find((s: any) => s.unita_misurata === unitaId);
+        if (!Array.isArray(sensorData)) return false;
+        const sensor = sensorData.find((s: any) => s.unita_misurata?.toUpperCase() === unitaCodifica.toUpperCase());
         if (!sensor) return false;
         const ts = DateTime.fromISO(sensor.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
         const diffMs = DateTime.now().setZone("Europe/Rome").diff(ts, "milliseconds").as("milliseconds");

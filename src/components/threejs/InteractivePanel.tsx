@@ -59,7 +59,7 @@ function FitAndPushOnce({
 
   return null;
 }
-const InteractivePanel = ({ sensorData, parameters, unita, macchine }: { sensorData: any; parameters: any; unita: any; macchine: any }) => {
+const InteractivePanel = ({ sensorData, parameters, macchine }: { sensorData: any; parameters: any; macchine: any }) => {
   const { progress } = useProgress();
   const controlsRef = useRef<any>(null);
   const plantRef = useRef<THREE.Group>(null!);
@@ -114,7 +114,7 @@ const InteractivePanel = ({ sensorData, parameters, unita, macchine }: { sensorD
 
         <Bounds clip margin={0.85}>
           <group ref={plantRef}>
-            <Macchinario sensorData={sensorData} parameters={parameters} unita={unita} macchine={macchine} />
+            <Macchinario sensorData={sensorData} parameters={parameters} macchine={macchine} />
           </group>
 
           <FitAndPushOnce
