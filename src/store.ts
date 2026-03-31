@@ -9,7 +9,6 @@ import dispoApi from "./services/apis/dispoApi";
 import unitaApi from "./services/apis/unitaApi";
 import snifferApi from "./services/apis/snifferApi";
 import parametersApi from "./services/apis/parametersApi";
-import macchinaApi from "./services/apis/macchinaApi";
 import notificationsReducer from "./services/slices/notificationSlice"
 
 const persistConfig = {
@@ -29,13 +28,12 @@ export const store = configureStore({
         [unitaApi.reducerPath]: unitaApi.reducer,
         [snifferApi.reducerPath]: snifferApi.reducer,
         [parametersApi.reducerPath]: parametersApi.reducer,
-        [macchinaApi.reducerPath]: macchinaApi.reducer,
         auth: persistedAuthReducer,
         notifications: notificationsReducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
         serializableCheck: false
-    }).concat(authApi.middleware, whitelistApi.middleware, logsApi.middleware, dispoApi.middleware, unitaApi.middleware, snifferApi.middleware, parametersApi.middleware, macchinaApi.middleware)
+    }).concat(authApi.middleware, whitelistApi.middleware, logsApi.middleware, dispoApi.middleware, unitaApi.middleware, snifferApi.middleware, parametersApi.middleware)
 })
 
 

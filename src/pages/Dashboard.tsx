@@ -2,7 +2,6 @@ import { useDispatch, useSelector } from "react-redux";
 import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 import type { RootState } from "../store.ts";
 import { useGetLastQuery } from "../services/apis/logsApi.ts";
-import { useGetMacchineQuery } from "../services/apis/macchinaApi.ts";
 import { DateTime } from "luxon";
 import { GoAlertFill } from "react-icons/go";
 import { FaBug, FaCircle, FaClock, FaWifi } from "react-icons/fa";
@@ -46,7 +45,6 @@ type WarningItem = {
 
 const Dashboard = () => {
   const { data: parameters } = useGetParametersQuery({});
-  const { data: macchine } = useGetMacchineQuery({});
   const user = useSelector((state: RootState) => state.auth.user);
 
     const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
@@ -61,6 +59,8 @@ const Dashboard = () => {
     { daysBefore: 30 },
     { pollingInterval: 3000 }
   );
+
+  const macchine = data?.data ?? [];
 
   const {
     elapsedTime,
@@ -77,8 +77,17 @@ const Dashboard = () => {
     const erroriNonAttendibili: ErrorItem[] = [];
     const warnings: WarningItem[] = [];
 
-    const logs = data?.data?.latestLogs ?? data?.data;
-    if (isLoading || !data || !Array.isArray(logs) || logs.length === 0) {
+    if (isLoading || !Array.isArray(macchine) || macchine.length === 0) {
+      return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
+    }
+
+    const logs = macchine.flatMap((m: any) =>
+      (m.unitaMisurate ?? [])
+        .filter((u: any) => u.lastLog !== null)
+        .map((u: any) => u.lastLog)
+    );
+
+    if (logs.length === 0) {
       return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
     }
 
@@ -164,7 +173,7 @@ const Dashboard = () => {
     });
 
     return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
-  }, [data, isLoading, parameters]);
+  }, [macchine, isLoading, parameters]);
 
   const hasErrors = errorCount > 0;
   const hasWarnings = warnings.length > 0;
@@ -389,7 +398,7 @@ const Dashboard = () => {
           </aside>
 
           <main className="flex-1 min-w-0 min-h-[300px] lg:min-h-0">
-            {!isLoading && <InteractivePanel sensorData={data?.data?.latestLogs ?? data?.data ?? []} parameters={parameters} macchine={macchine?.data ?? []} />}
+            {!isLoading && <InteractivePanel macchine={macchine} parameters={parameters} />}
           </main>
 
           <aside className="w-full lg:w-[280px] xl:w-[320px] 2xl:w-[350px] px-3 py-2 lg:py-0 flex-shrink-0 max-h-[40vh] lg:max-h-none lg:h-auto overflow-y-auto scrollbar-elegant">

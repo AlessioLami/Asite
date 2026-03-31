@@ -11,22 +11,31 @@ import Tramoggia2 from "./Tramoggia2";
 import Vaglio from "./Vaglio";
 import { DateTime } from "luxon";
 
+export type LastLogData = {
+    mac_dispo: string;
+    batt_level: number;
+    temp_calc: number;
+    ts_registrazione: string;
+    isInTempAlarm: boolean;
+    tempLimit: number;
+    dispo_codifica: string;
+    unita_misurata: string;
+} | null;
+
+export type UnitaMisurata = {
+    _id: string;
+    codifica: string;
+    tipo: string;
+    tempLimit: number;
+    lastLog: LastLogData;
+};
+
 export type MacchinaData = {
     _id: string;
     codifica: string;
     descrizione: string;
     tipo: string;
-    unitaMisurate: {
-        _id: string;
-        codifica: string;
-        tipo: string;
-        tempLimit: number;
-        dispositivo?: {
-            _id: string;
-            mac: string;
-            codifica: string;
-        };
-    }[];
+    unitaMisurate: UnitaMisurata[];
 };
 
 export type ErrorProps = {
@@ -35,8 +44,17 @@ export type ErrorProps = {
     macchina?: MacchinaData;
 }
 
-const Macchinario = ({ sensorData, parameters, macchine }: { sensorData: any; parameters: any; macchine: any }) => {
+const Macchinario = ({ macchine, parameters }: { macchine: any; parameters: any }) => {
     const maxDispoUpdateTime = Array.isArray(parameters) ? (parameters.find((p: any) => p.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0) : 0;
+
+    const getLastLog = (unitaCodifica: string): LastLogData => {
+        if (!Array.isArray(macchine)) return null;
+        for (const m of macchine) {
+            const unita = m.unitaMisurate?.find((u: UnitaMisurata) => u.codifica?.toUpperCase() === unitaCodifica.toUpperCase());
+            if (unita?.lastLog) return unita.lastLog;
+        }
+        return null;
+    };
 
     const getMacchina = (codifica: string): MacchinaData | undefined => {
         if (!Array.isArray(macchine)) return undefined;
@@ -44,15 +62,14 @@ const Macchinario = ({ sensorData, parameters, macchine }: { sensorData: any; pa
     }
 
     const hasError = (unitaCodifica: string) => {
-        if (!Array.isArray(sensorData)) return false;
-        return sensorData.some((s: any) => s.unita_misurata?.toUpperCase() === unitaCodifica.toUpperCase() && s.isInTempAlarm === true);
+        const log = getLastLog(unitaCodifica);
+        return log?.isInTempAlarm === true;
     }
 
     const hasWarning = (unitaCodifica: string) => {
-        if (!Array.isArray(sensorData)) return false;
-        const sensor = sensorData.find((s: any) => s.unita_misurata?.toUpperCase() === unitaCodifica.toUpperCase());
-        if (!sensor) return false;
-        const ts = DateTime.fromISO(sensor.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
+        const log = getLastLog(unitaCodifica);
+        if (!log) return false;
+        const ts = DateTime.fromISO(log.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
         const diffMs = DateTime.now().setZone("Europe/Rome").diff(ts, "milliseconds").as("milliseconds");
         return diffMs > maxDispoUpdateTime;
     }

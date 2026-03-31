@@ -45,8 +45,21 @@ const VaglioInfo = () => {
 
   const rows: LogItem[] = useMemo(
     () => {
-      const logs = data?.data?.latestLogs ?? data?.data;
-      return Array.isArray(logs) ? (logs as LogItem[]) : [];
+      const macchine = data?.data ?? [];
+      if (!Array.isArray(macchine)) return [];
+      return macchine.flatMap((m: any) =>
+        (m.unitaMisurate ?? [])
+          .filter((u: any) => u.lastLog !== null)
+          .map((u: any) => ({
+            id: u.lastLog.mac_dispo,
+            dispo_codifica: u.lastLog.dispo_codifica,
+            temp_calc: u.lastLog.temp_calc,
+            tempLimit: u.lastLog.tempLimit,
+            ts_registrazione: u.lastLog.ts_registrazione,
+            unita_misurata: u.lastLog.unita_misurata,
+            isInTempAlarm: u.lastLog.isInTempAlarm,
+          }))
+      );
     },
     [data]
   );
