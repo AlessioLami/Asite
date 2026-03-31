@@ -65,7 +65,7 @@ const InteractivePanel = ({ macchine, parameters }: { macchine: any; parameters:
   const plantRef = useRef<THREE.Group>(null!);
 
   return (
-    <div className="relative rounded-xl z-1 w-full max-w-[1000px] h-screen max-h-[calc(100vh-80px)]">
+    <div className="relative rounded-xl z-1 w-full h-full">
       {progress < 100 && (
         <div className="absolute w-full h-full flex bg-gray-400 justify-center items-center font-black text-5xl text-white">
           Caricando i modelli... {Math.round(progress)}%
