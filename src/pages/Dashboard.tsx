@@ -119,27 +119,18 @@ const Dashboard = () => {
     });
 
     dispoStatus.forEach((item: any) => {
-      if (!item.warning) return;
-      if (!item.hasLog) {
-        warnings.push({
-          codifica: item.codifica,
-          description: `Il dispositivo ${item.codifica} non ha mai comunicato`,
-          time: "-",
-          date: "-",
-        });
-      } else {
-        const humanDelta = ((ms: number) => {
-          let s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
-          s %= 60; m %= 60; h %= 24;
-          return [d ? `${d}g` : "", h ? `${h}h` : "", m ? `${m}m` : "", s ? `${s}s` : ""].filter(Boolean).join(" ");
-        })(item.delta);
-        warnings.push({
-          codifica: item.codifica,
-          description: `Il dispositivo ${item.codifica} non comunica da ${humanDelta}`,
-          time: item.ts.toFormat("HH:mm:ss"),
-          date: item.ts.toFormat("dd/MM/yyyy"),
-        });
-      }
+      if (!item.warning || !item.hasLog) return;
+      const humanDelta = ((ms: number) => {
+        let s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+        s %= 60; m %= 60; h %= 24;
+        return [d ? `${d}g` : "", h ? `${h}h` : "", m ? `${m}m` : "", s ? `${s}s` : ""].filter(Boolean).join(" ");
+      })(item.delta);
+      warnings.push({
+        codifica: item.codifica,
+        description: `Il dispositivo ${item.codifica} non comunica da ${humanDelta}`,
+        time: item.ts.toFormat("HH:mm:ss"),
+        date: item.ts.toFormat("dd/MM/yyyy"),
+      });
     });
 
     warnings.sort((a, b) => a.codifica.localeCompare(b.codifica));
