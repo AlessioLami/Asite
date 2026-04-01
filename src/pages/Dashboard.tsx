@@ -64,39 +64,37 @@ const Dashboard = () => {
 
   const {
     elapsedTime,
-    onlineSensorCount,
+    totalDevices,
+    communicatingCount,
     errorCount,
     erroriAttendibili,
     erroriNonAttendibili,
     warnings,
   } = useMemo(() => {
     let elapsedTime = "";
-    let onlineSensorCount = 0;
+    let totalDevices = 0;
+    let communicatingCount = 0;
     let errorCount = 0;
     const erroriAttendibili: ErrorItem[] = [];
     const erroriNonAttendibili: ErrorItem[] = [];
     const warnings: WarningItem[] = [];
 
     if (isLoading || !Array.isArray(macchine) || macchine.length === 0) {
-      return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
+      return { elapsedTime, totalDevices, communicatingCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
     }
 
-    const logs = macchine.flatMap((m: any) =>
-      (m.unitaMisurate ?? [])
-        .filter((u: any) => u.lastLog !== null)
-        .map((u: any) => u.lastLog)
-    );
+    const allUnits = macchine.flatMap((m: any) => m.unitaMisurate ?? []);
+    const logs = allUnits.filter((u: any) => u.lastLog !== null).map((u: any) => u.lastLog);
 
-    if (logs.length === 0) {
-      return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
+    totalDevices = allUnits.length;
+
+    if (logs.length > 0) {
+      const ultimo = logs.reduce((a: any, b: any) =>
+        DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b
+      );
+      const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
+      elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "");
     }
-
-    const ultimo = logs.reduce((a: any, b: any) =>
-      DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b
-    );
-    const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
-    elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "");
-    onlineSensorCount = logs.length;
 
     errorCount = logs.filter((item: any) => item.isInTempAlarm === true).length;
 
@@ -143,6 +141,8 @@ const Dashboard = () => {
 
     warnings.sort((a, b) => a.codifica.localeCompare(b.codifica));
 
+    communicatingCount = dispoWarning.filter((d: any) => !d.warning).length;
+
     const errorRows: ErrorItem[] = [];
     logs
       .filter((item: any) => item.isInTempAlarm === true)
@@ -172,12 +172,12 @@ const Dashboard = () => {
       else erroriNonAttendibili.push(e);
     });
 
-    return { elapsedTime, onlineSensorCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
+    return { elapsedTime, totalDevices, communicatingCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
   }, [macchine, isLoading, parameters]);
 
   const hasErrors = errorCount > 0;
   const hasWarnings = warnings.length > 0;
-  const allDevicesOffline = onlineSensorCount === 0 || warnings.length === onlineSensorCount;
+  const allDevicesOffline = communicatingCount === 0;
 
   const systemStatus = hasErrors ? "error" : hasWarnings ? "warn" : "ok";
 
@@ -353,7 +353,7 @@ const Dashboard = () => {
                   <FaWifi className="h-4 mr-2 flex-shrink-0 text-emerald-300" />
                   <span>Dispositivi</span>
                   <span className="ml-auto bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/30 px-2 rounded-md font-semibold text-sm">
-                    {onlineSensorCount}
+                    {totalDevices}
                   </span>
                 </div>
                 <div className="flex text-sm lg:text-base items-center text-white font-semibold">
