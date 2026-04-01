@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import InteractivePanel from "../components/threejs/InteractivePanel.tsx";
 import type { RootState } from "../store.ts";
 import { useGetLastQuery } from "../services/apis/logsApi.ts";
+import { useGetDispoQuery } from "../services/apis/dispoApi.ts";
 import { DateTime } from "luxon";
 import { GoAlertFill } from "react-icons/go";
 import { FaBug, FaCircle, FaClock, FaWifi } from "react-icons/fa";
@@ -45,9 +46,10 @@ type WarningItem = {
 
 const Dashboard = () => {
   const { data: parameters } = useGetParametersQuery({});
+  const { data: dispoData } = useGetDispoQuery({});
   const user = useSelector((state: RootState) => state.auth.user);
 
-    const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
+  const role = useSelector((state: RootState) => state.auth.role)?.toUpperCase() ?? "";
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -61,6 +63,7 @@ const Dashboard = () => {
   );
 
   const macchine = data?.data ?? [];
+  const dispositivi = dispoData?.data ?? [];
 
   const {
     elapsedTime,
@@ -83,68 +86,68 @@ const Dashboard = () => {
       return { elapsedTime, totalDevices, communicatingCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
     }
 
-    const allUnits = macchine.flatMap((m: any) => m.unitaMisurate ?? []);
-    const logs = allUnits.filter((u: any) => u.lastLog !== null).map((u: any) => u.lastLog);
+    const allLogs = macchine.flatMap((m: any) =>
+      (m.unitaMisurate ?? [])
+        .filter((u: any) => u.lastLog !== null)
+        .map((u: any) => u.lastLog)
+    );
 
-    totalDevices = allUnits.length;
+    totalDevices = Array.isArray(dispositivi) ? dispositivi.length : 0;
 
-    if (logs.length > 0) {
-      const ultimo = logs.reduce((a: any, b: any) =>
+    if (allLogs.length > 0) {
+      const ultimo = allLogs.reduce((a: any, b: any) =>
         DateTime.fromISO(a.ts_registrazione) > DateTime.fromISO(b.ts_registrazione) ? a : b
       );
       const timeStampLocal = DateTime.fromISO(ultimo.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
       elapsedTime = calcElapsedTime(timeStampLocal.toISO() ?? "");
     }
 
-    errorCount = logs.filter((item: any) => item.isInTempAlarm === true).length;
+    errorCount = allLogs.filter((item: any) => item.isInTempAlarm === true).length;
 
-    const dispoWarning = logs.map((item: any) => {
-      const maxDispoUpdateTime =
-        parameters?.find((param: any) => param.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
-      const ts_registrazione = DateTime.fromISO(item.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
-      const diffInMilliseconds = DateTime.now()
-        .setZone("Europe/Rome")
-        .diff(ts_registrazione, "milliseconds")
-        .as("milliseconds");
-      return {
-        id: item.mac_dispo,
-        codifica: item.dispo_codifica,
-        ts: ts_registrazione,
-        warning: diffInMilliseconds > maxDispoUpdateTime,
-        delta: diffInMilliseconds,
-      };
+    const maxDispoUpdateTime = parameters?.find((param: any) => param.keySetting === "maxDispoUpdateTime")?.numberValue ?? 0;
+
+    const logsByMac = new Map(allLogs.map((log: any) => [log.mac_dispo, log]));
+
+    const dispoStatus = (dispositivi as any[]).map((dispo: any) => {
+      const log = logsByMac.get(dispo.mac);
+      if (!log) {
+        return { codifica: dispo.codifica, hasLog: false, warning: true, ts: null, delta: 0 };
+      }
+      const ts = DateTime.fromISO(log.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
+      const delta = DateTime.now().setZone("Europe/Rome").diff(ts, "milliseconds").as("milliseconds");
+      return { codifica: dispo.codifica, hasLog: true, warning: delta > maxDispoUpdateTime, ts, delta };
     });
 
-    dispoWarning.forEach((item: any) => {
+    dispoStatus.forEach((item: any) => {
       if (!item.warning) return;
-      const humanDelta = ((ms: number) => {
-        let s = Math.floor(ms / 1000),
-          m = Math.floor(s / 60),
-          h = Math.floor(m / 60),
-          d = Math.floor(h / 24);
-        s %= 60; m %= 60; h %= 24;
-        return [
-          d ? `${d} ${d === 1 ? "giorno" : "giorni"}` : "",
-          h ? `${h} ${h === 1 ? "ora" : "ore"}` : "",
-          m ? `${m} ${m === 1 ? "minuto" : "minuti"}` : "",
-          s ? `${s} ${s === 1 ? "secondo" : "secondi"}` : "",
-        ].filter(Boolean).join(", ");
-      })(item.delta);
-
-      warnings.push({
-        codifica: item.codifica,
-        description: `Il dispositivo ${item.codifica} non comunica da ${humanDelta}`,
-        time: item.ts.setZone("Europe/Rome").toFormat("HH:mm:ss"),
-        date: item.ts.setZone("Europe/Rome").toFormat("dd/MM/yyyy"),
-      });
+      if (!item.hasLog) {
+        warnings.push({
+          codifica: item.codifica,
+          description: `Il dispositivo ${item.codifica} non ha mai comunicato`,
+          time: "-",
+          date: "-",
+        });
+      } else {
+        const humanDelta = ((ms: number) => {
+          let s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+          s %= 60; m %= 60; h %= 24;
+          return [d ? `${d}g` : "", h ? `${h}h` : "", m ? `${m}m` : "", s ? `${s}s` : ""].filter(Boolean).join(" ");
+        })(item.delta);
+        warnings.push({
+          codifica: item.codifica,
+          description: `Il dispositivo ${item.codifica} non comunica da ${humanDelta}`,
+          time: item.ts.toFormat("HH:mm:ss"),
+          date: item.ts.toFormat("dd/MM/yyyy"),
+        });
+      }
     });
 
     warnings.sort((a, b) => a.codifica.localeCompare(b.codifica));
 
-    communicatingCount = dispoWarning.filter((d: any) => !d.warning).length;
+    communicatingCount = dispoStatus.filter((d: any) => !d.warning).length;
 
     const errorRows: ErrorItem[] = [];
-    logs
+    allLogs
       .filter((item: any) => item.isInTempAlarm === true)
       .forEach((item: any) => {
         const ts = DateTime.fromISO(item.ts_registrazione, { zone: 'utc' }).setZone("Europe/Rome");
@@ -173,7 +176,7 @@ const Dashboard = () => {
     });
 
     return { elapsedTime, totalDevices, communicatingCount, errorCount, erroriAttendibili, erroriNonAttendibili, warnings };
-  }, [macchine, isLoading, parameters]);
+  }, [macchine, dispositivi, isLoading, parameters]);
 
   const hasErrors = errorCount > 0;
   const hasWarnings = warnings.length > 0;
