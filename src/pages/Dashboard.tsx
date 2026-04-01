@@ -177,6 +177,7 @@ const Dashboard = () => {
 
   const hasErrors = errorCount > 0;
   const hasWarnings = warnings.length > 0;
+  const allDevicesOffline = onlineSensorCount === 0 || warnings.length === onlineSensorCount;
 
   const systemStatus = hasErrors ? "error" : hasWarnings ? "warn" : "ok";
 
@@ -300,14 +301,14 @@ const Dashboard = () => {
 
               <span
                 className={`h-7 md:h-[30px] ${
-                  hasWarnings
+                  allDevicesOffline
                     ? "bg-red-500/20 text-red-300 ring-1 ring-inset ring-red-500/30 shadow-[0_0_18px] shadow-red-500/20"
                     : "bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-500/30 shadow-[0_0_18px] shadow-emerald-500/20"
                 } rounded-full px-2 text-sm md:text-base flex font-semibold items-center`}
               >
-                <FaWifi className={`h-3 w-3 md:h-4 md:w-4 mr-1 ${hasWarnings ? "text-red-300" : "text-emerald-300"}`} />
+                <FaWifi className={`h-3 w-3 md:h-4 md:w-4 mr-1 ${allDevicesOffline ? "text-red-300" : "text-emerald-300"}`} />
                 <span className="hidden md:inline">Comunicazione:</span>
-                <span className="ml-1">{hasWarnings ? "KO" : "OK"}</span>
+                <span className="ml-1">{allDevicesOffline ? "KO" : "OK"}</span>
               </span>
             </div>
           </div>
