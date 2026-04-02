@@ -141,3 +141,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+.dark [data-slot="calendar"] button[data-range-start="true"],
+.dark [data-slot="calendar"] button[data-range-end="true"],
+.dark [data-slot="calendar"] button[data-selected-single="true"] {
+  background-color: rgb(14 165 233) !important;
+  color: white !important;
+}
+
+.dark [data-slot="calendar"] button[data-range-middle="true"] {
+  background-color: rgba(14, 165, 233, 0.3) !important;
+  color: white !important;
+}

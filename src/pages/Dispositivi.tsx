@@ -83,7 +83,7 @@ const Dispositivi = () => {
 
   return (
     <div
-      className="flex flex-col text-white relative w-full min-h-screen overflow-auto p-4 sm:p-6 lg:p-10"
+      className="dark flex flex-col text-white relative w-full min-h-screen overflow-auto p-4 sm:p-6 lg:p-10"
       style={{
         backgroundColor: "#0f172a",
         backgroundImage: `
@@ -118,25 +118,23 @@ const Dispositivi = () => {
               required
               selected={dateRange}
               onSelect={handleDateChange}
-              style={{
-                ["--rdp-background-color" as any]: "transparent",
-                ["--rdp-cell-size" as any]: "34px",
-                ["--rdp-accent-color" as any]: "rgb(56 189 248)",
+              className="w-full !bg-transparent"
+              classNames={{
+                months: "flex gap-4 flex-col md:flex-row relative",
+                month_caption: "flex items-center justify-center h-8 w-full text-white font-semibold",
+                caption_label: "text-white font-semibold",
+                nav: "flex items-center gap-1 w-full absolute top-0 inset-x-0 justify-between",
+                button_previous: "text-white hover:bg-white/10 rounded-md p-1",
+                button_next: "text-white hover:bg-white/10 rounded-md p-1",
+                weekday: "text-white/60 font-normal text-sm w-8 text-center",
+                day: "relative w-full h-full p-0 text-center group/day aspect-square select-none text-white",
+                range_start: "!bg-sky-500 rounded-l-md",
+                range_middle: "!bg-sky-500/30",
+                range_end: "!bg-sky-500 rounded-r-md",
+                selected: "!bg-sky-500 text-white",
+                today: "ring-1 ring-sky-400 rounded-md",
+                outside: "text-white/30",
               }}
-              className="
-                w-full !bg-transparent
-                [&_.rdp-caption_label]:text-white
-                [&_.rdp-head_cell]:text-white/70
-                [&_.rdp-day]:text-white
-                [&_.rdp-day_button]:relative [&_.rdp-day_button]:z-[1]
-                [&_.rdp-day_range_middle]:bg-sky-400/15
-                [&_.rdp-day_range_start_.rdp-day_button]:!bg-sky-400
-                [&_.rdp-day_range_end_.rdp-day_button]:!bg-sky-400
-                [&_.rdp-day_selected_.rdp-day_button]:!bg-sky-400 text-white
-                [&_.rdp-day_range_start_.rdp-day_button]:!rounded-l-full !text-white
-                [&_.rdp-day_range_end_.rdp-day_button]:!rounded-r-full !text-white
-                [&_.rdp-day_range_middle_.rdp-day_button]:!rounded-none
-              "
             />
           </div>
 
